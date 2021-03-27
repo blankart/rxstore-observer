@@ -10,5 +10,5 @@ export interface RxJsStore<
     getState: () => StoreState
     subscribe: ( subscribeFunction: SubscribeFunction ) => any
     dispatch: ( action: Action ) => any
-    addWatcher: ( type: ActionType, watchFunction: WatchFunction ) => any
+    addWatcher: ( type: ActionType | "*", watchFunction: WatchFunction ) => any
 }

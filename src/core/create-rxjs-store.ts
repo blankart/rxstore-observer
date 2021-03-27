@@ -7,7 +7,7 @@ const createRxjsStore = <
     StoreState extends Record<string, any>,
     Action extends { type: string, [key: string]: any },
     SubscribeFunction extends ( store: StoreState ) => any,
-    WatchFunction = ( _pipe: ( ...args: Array<OperatorFunction<Action, any>> ) => Array<OperatorFunction<unknown, unknown>> ) => void
+    WatchFunction = ( _pipe: ( ...args: Array<OperatorFunction<Action, any>> ) => Array<OperatorFunction<Action, any>> ) => void
 >(
     rootReducer: ( state: StoreState , action: Action ) => StoreState
 ): RxJsStore<StoreState, SubscribeFunction, Action["type"], Action, WatchFunction> => {
@@ -42,7 +42,7 @@ const createRxjsStore = <
             watchersSubscriptions = []
             _watchers.forEach( _watcher => {
                 const pipes = ( _watcher.watchFunction as unknown as ( ...args: any ) => any )( 
-                    ( ...args: Array<OperatorFunction<unknown, unknown>> ) : Array<OperatorFunction<unknown, unknown>> => [ ...args ]
+                    ( ...args: Array<OperatorFunction<Action, unknown>> ) : Array<OperatorFunction<Action, unknown>> => [ ...args ]
                 ) 
 
                 const observable = ( pipeFromArray( [ 

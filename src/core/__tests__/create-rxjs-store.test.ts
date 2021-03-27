@@ -1,48 +1,6 @@
 import createRxjsStore from '../create-rxjs-store'
 import { map } from 'rxjs/operators'
-
-interface State {
-    dummyField1: string,
-    dummyField2: string,
-    dummyField3: string
-}
-
-const initialState: State = {
-    dummyField1: '',
-    dummyField2: '',
-    dummyField3: '',
-}
-
-type Types = "CHANGE_DUMMY_FIELD_1" | "CHANGE_DUMMY_FIELD_2" | "CHANGE_DUMMY_FIELD_3"
-
-interface Action {
-    type: Types,
-    payload: string
-}
-
-const reducer = ( state: State = initialState, action: Action ) => {
-    switch ( action.type ) {
-    case "CHANGE_DUMMY_FIELD_1": {
-        return {
-            ...state,
-            dummyField1: action.payload
-        }
-    }
-    case "CHANGE_DUMMY_FIELD_2": {
-        return {
-            ...state,
-            dummyField2: action.payload
-        }
-    }
-    case "CHANGE_DUMMY_FIELD_3": {
-        return {
-            ...state,
-            dummyField3: action.payload
-        }
-    }
-    default: return state
-    }
-}
+import { Action, reducer, initialState } from '#templates/mock-store'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
