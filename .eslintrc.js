@@ -16,9 +16,6 @@ module.exports =  { //eslint-disable-line
     "plugins": [
         "@typescript-eslint"
     ],
-    "ecmaFeatures":  {
-        jsx:  true,  // Allows for the parsing of JSX
-    },
     "rules": {
         "indent": "off",
         "@typescript-eslint/indent": [ "error", 4, { "FunctionDeclaration": { parameters: 2 } } ],
@@ -46,4 +43,9 @@ module.exports =  { //eslint-disable-line
                 nonwords: true,
             } ],
     },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    }
 }

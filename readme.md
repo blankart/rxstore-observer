@@ -1,10 +1,10 @@
-# RxJS Store
+# React RxJS Store
 
 This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxjsStore } from 'rxjs-store-watcher'
+import { createRxjsStore } from 'react-rxjs-store'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
