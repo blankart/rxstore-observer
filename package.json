@@ -7,7 +7,7 @@
     "start": "ts-node src/index.ts",
     "dev": "nodemon --exec ts-node src/index.ts",
     "watch": "tsc -w",
-    "test": "jest --watchAll"
+    "test": "jest --no-cache"
   },
   "author": "Nico Mendoza",
   "license": "ISC",
