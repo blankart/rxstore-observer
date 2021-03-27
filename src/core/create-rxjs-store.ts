@@ -1,21 +1,20 @@
 import { BehaviorSubject, from, Observable, OperatorFunction, Subscription } from 'rxjs'
 import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter } from 'rxjs/operators'
-import { RxJsStore } from '#types'
+import { RxJsStore, WatchFunction , SubscribeFunction , Action as ActionGeneric  } from '#types'
 
 const createRxjsStore = <
-    StoreState extends Record<string, any>,
-    Action extends { type: string, [key: string]: any },
-    SubscribeFunction extends ( store: StoreState ) => any,
-    WatchFunction = ( _pipe: ( ...args: Array<OperatorFunction<Action, any>> ) => Array<OperatorFunction<Action, any>> ) => void
+    StoreState = Record<string, any>,
+    Action extends ActionGeneric = ActionGeneric,
 >(
     rootReducer: ( state: StoreState , action: Action ) => StoreState
-): RxJsStore<StoreState, SubscribeFunction, Action["type"], Action, WatchFunction> => {
-    const state = new BehaviorSubject<StoreState | Record<string, never>>( {} )
+): RxJsStore<StoreState, Action, SubscribeFunction, WatchFunction> => {
+    const _initialState = rootReducer( ( undefined as unknown ) as StoreState, {} as Action )
+    const state = new BehaviorSubject<StoreState>( _initialState )
 
-    const action = new BehaviorSubject<Action | Record<string, never>>( {} )
+    const action = new BehaviorSubject<Action | { type: 'INITIALIZE_STORE'}>( { type: 'INITIALIZE_STORE' } )
 
-    const listeners: Array<SubscribeFunction>  = []
+    const listeners: Array<SubscribeFunction<StoreState>> = []
 
     const watchers: Array<{ type: Action["type"], watchFunction: WatchFunction}> = []
     const watchersListener = new BehaviorSubject<Array<{ type: Action["type"], watchFunction: WatchFunction }>>( [] )
@@ -65,7 +64,7 @@ const createRxjsStore = <
         action.next( newAction )
     }
 
-    const subscribe = ( subscribeFunction: SubscribeFunction ) => {
+    const subscribe = ( subscribeFunction: SubscribeFunction<StoreState> ) => {
         listeners.push( subscribeFunction )
     }
 
@@ -73,9 +72,6 @@ const createRxjsStore = <
         watchers.push( { type, watchFunction } )
         watchersListener.next( watchers )
     }
-
-    const _initialState = rootReducer( ( undefined as unknown ) as StoreState, {} as Action )
-    state.next( _initialState )
 
     return { getState, subscribe, dispatch, addWatcher }
 }

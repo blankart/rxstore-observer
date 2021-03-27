@@ -1,14 +1,27 @@
-import { Observable, OperatorFunction } from 'rxjs'
+import { OperatorFunction } from 'rxjs'
 
 export interface RxJsStore<
-    StoreState extends Record<string, any>,
-    SubscribeFunction extends ( store: StoreState ) => any,
-    ActionType extends string,
-    Action extends { type: ActionType, [key: string]: any },
-    WatchFunction = ( _pipe: ( ...args: Array<OperatorFunction<unknown, unknown>> ) => Observable<Action> ) => Observable<Action>
+    S = Record<string, any>,
+    V extends Action = Action,
+    U = SubscribeFunction<S>,
+    W = WatchFunction<V>
 > {
-    getState: () => StoreState
-    subscribe: ( subscribeFunction: SubscribeFunction ) => any
-    dispatch: ( action: Action ) => any
-    addWatcher: ( type: ActionType, watchFunction: WatchFunction ) => any
+    getState: () => S
+    subscribe: ( subscribeFunction: U ) => any
+    dispatch: ( action: V ) => any
+    addWatcher: ( type: V["type"], watchFunction: W ) => any
 }
+
+export interface WatchFunction<T = any> {
+    ( _pipe: ( ...args: Array<OperatorFunction<T, any>> ) => Array<OperatorFunction<T, any>> ): void
+} 
+
+export interface SubscribeFunction<T = Record<string, any>> { 
+    ( store: T ): any 
+}
+
+export interface Action<T = any> {
+    type: T,
+    [key: string]: any
+}
+
