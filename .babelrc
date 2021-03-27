@@ -1,0 +1,15 @@
+{
+    // "test": {
+    //     "presets": [
+    //         "@babel/preset-typescript",
+    //          [
+    //             "next/babel",
+    //             {
+    //                 "preset-env": {
+    //                 "modules": "commonjs"
+    //                 }
+    //             }
+    //         ]
+    //     ]
+    // },
+}
