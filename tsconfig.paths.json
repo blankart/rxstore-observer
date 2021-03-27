@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+        "#types": ["src/types/index"],
+        "#core": ["src/core/index"]
+    }
   }
 }

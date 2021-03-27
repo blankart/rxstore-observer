@@ -1,7 +1,7 @@
 import { BehaviorSubject, from, Observable, OperatorFunction, Subscription } from 'rxjs'
 import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter } from 'rxjs/operators'
-import { RxJsStore } from './types'
+import { RxJsStore } from '#types'
 
 const createRxjsStore = <
     StoreState extends Record<string, any>,

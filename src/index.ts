@@ -1,2 +1,2 @@
-export { default as createRxjsStore } from './create-rxjs-store'
+export { createRxjsStore } from './core'
 export { RxJsStore } from './types'
