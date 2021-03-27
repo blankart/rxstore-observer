@@ -9,11 +9,11 @@ export interface RxJsStore<
     getState: () => S
     subscribe: ( subscribeFunction: U ) => any
     dispatch: ( action: V ) => any
-    addWatcher: ( type: V["type"], watchFunction: W ) => any
+    addWatcher: ( type: V[ "type" ], watchFunction: W ) => any
 }
 
 export interface WatchFunction<T = any> {
-    ( _pipe: ( ...args: Array<OperatorFunction<T, any>> ) => Array<OperatorFunction<T, any>> ): void
+    ( _pipe: ( ...args: Array<OperatorFunction<T, any> | RxjsStoreOperator<any, any>> ) => Array<OperatorFunction<T, any> | RxjsStoreOperator<any, any>> ): void
 } 
 
 export interface SubscribeFunction<T = Record<string, any>> { 
@@ -25,3 +25,10 @@ export interface Action<T = any> {
     [key: string]: any
 }
 
+export interface RxjsStoreOperator<
+    T,
+    V extends ( args: Record<string, any> ) => any = ( args: Record<string, any> ) => any
+> {
+    key: T
+    callback: V
+}
