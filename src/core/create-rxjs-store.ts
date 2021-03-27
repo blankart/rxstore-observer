@@ -3,6 +3,13 @@ import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter } from 'rxjs/operators'
 import { RxJsStore, WatchFunction , SubscribeFunction , Action as ActionGeneric  } from '#types'
 
+/**
+ * Function for creating an RxJS Store.
+ * 
+ * @param {( state: StoreState , action: Action ) => StoreState} rootReducer 
+ * 
+ * @return {RxJsStore<StoreState, Action, SubscribeFunction, WatchFunction>} generated store
+ */
 const createRxjsStore = <
     StoreState = Record<string, any>,
     Action extends ActionGeneric = ActionGeneric,

@@ -1,4 +1,4 @@
-# React RxJS Store
+# RxJS Store
 
 A state management tool using RxJS
 
@@ -6,7 +6,7 @@ This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxjsStore } from 'react-rxjs-store'
+import { createRxjsStore } from 'rxjs-store'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
