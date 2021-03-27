@@ -1,5 +1,7 @@
 # React RxJS Store
 
+A state management tool using RxJS
+
 This project is currently in development.
 
 ### Usage:

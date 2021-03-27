@@ -2,8 +2,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-        "#types": ["src/types/index"],
-        "#core": ["src/core/index"]
+        "#core": ["src/core/index"],
+        "#operators": ["src/operators/index"],
+        "#templates/*": ["src/templates/*"],
+        "#types": ["src/types/index"]
     }
   }
 }
