@@ -8,7 +8,7 @@ export interface RxJsStore<
 > {
     getState: () => S
     subscribe: ( subscribeFunction: U ) => any
-    dispatch: ( action: V ) => any
+    dispatch: <T = V>( action: T ) => any
     addWatcher: ( type: V[ "type" ], watchFunction: W ) => any
 }
 
@@ -34,8 +34,9 @@ export interface RxjsStoreOperator<
 }
 
 export interface RxjsStoreMiddleware<
-    S extends Record<string, any> = Record<string, any>,
-    T extends Action = Action
+    S = Record<string, any>,
+    T extends Action = Action,
+    U = Action
 > {
-    ( store: RxJsStore<S, T> ) : ( next: ( a: T ) => any ) => ( action: T ) => any
+    ( store: RxJsStore<S, T> ) : ( next: ( a: T ) => any ) => ( a: U ) => any
 }

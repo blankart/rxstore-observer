@@ -40,4 +40,22 @@ describe( 'applyMiddleware', () => {
         expect( mockFunction2 ).toBeCalledTimes( 21 )
         expect( mockFunction3 ).toBeCalledTimes( 21 )
     } )
+
+    test( 'Test simple thunk middleware', () => {
+        const simpleThunkMiddleware: RxjsStoreMiddleware = store => next => ( action: any ) => {
+            if ( typeof action === 'function' ) {
+                return action( store.dispatch )
+            }
+            return next( action )
+        } 
+        const dummyStore = createRxjsStore( reducer, initialState, applyMiddleware<State, Action>( simpleThunkMiddleware ) )
+        dummyStore.dispatch<( ...a: any ) => void>( dispatch => {
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_2', payload: 'Changed value' } )
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_3', payload: 'Changed value' } )
+        } )
+        expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
+        expect( dummyStore.getState().dummyField2 ).toBe( 'Changed value' )
+        expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value' )
+    } )
 } )

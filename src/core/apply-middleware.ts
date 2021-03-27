@@ -1,8 +1,8 @@
 import { Action as GenericAction, RxJsStore, RxjsStoreMiddleware } from '#types'
 
 const applyMiddleware = <
-    StoreState extends Record<string, any> = Record<string, any>,
-    Action extends GenericAction = GenericAction
+    StoreState extends Record<string, any>,
+    Action extends GenericAction
 >( ...middlewares: Array<RxjsStoreMiddleware<any, any>> ): RxjsStoreMiddleware<StoreState, Action> => {
     return ( ( store: RxJsStore<StoreState, Action> ) => ( next: ( action: Action ) => any ) => ( action: Action ): any => {
         if ( middlewares.length === 0 ) {

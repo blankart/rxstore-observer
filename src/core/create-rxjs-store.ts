@@ -18,7 +18,7 @@ const createRxjsStore = <
     rootReducer: ( state: StoreState , action: Action ) => StoreState,
     initialState?: StoreState,
     appliedMiddleware?: RxjsStoreMiddleware<StoreState, Action>
-): RxJsStore<StoreState, Action, SubscribeFunction, WatchFunction> => {
+): RxJsStore<StoreState, Action, SubscribeFunction<StoreState>, WatchFunction<Action>> => {
     if ( ! initialState ) {
         initialState = rootReducer( ( undefined as unknown ) as StoreState, {} as Action )
     }
@@ -107,11 +107,13 @@ const createRxjsStore = <
     }
 
     const dispatch = ( newAction: Action ) => {
-        const next = ( val: Action ) => action.next( val ) 
-        appliedMiddleware ? appliedMiddleware( { getState, subscribe, dispatch, addWatcher } )( next )( newAction ) : next( newAction )
+        const next = ( val: Action ): any => action.next( val ) 
+        appliedMiddleware ? appliedMiddleware( 
+            ( { getState, subscribe, dispatch, addWatcher } ) as RxJsStore<StoreState, Action, SubscribeFunction<StoreState>, WatchFunction<Action>> 
+        )( next )( newAction ) : next( newAction )
     }
 
-    return { getState, subscribe, dispatch, addWatcher }
+    return { getState, subscribe, dispatch, addWatcher } as RxJsStore<StoreState, Action, SubscribeFunction<StoreState>, WatchFunction<Action>>
 }
 
 export default createRxjsStore

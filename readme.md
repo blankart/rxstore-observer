@@ -6,7 +6,7 @@ This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxjsStore } from 'rxjs-store'
+import { createRxjsStore, applyMiddleware } from 'rxjs-store'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
@@ -24,7 +24,7 @@ const reducer = (state = initialState, action) => {
     }
 }
 
-const store = createRxjsStore(reducer)
+const store = createRxjsStore(reducer, initialState, applyMiddleware(yourAwesomeMiddleware))
 
 store.subscribe(currentState => {
     console.log('Current state: ', currentState) // { counter: 0, pinging: false }
