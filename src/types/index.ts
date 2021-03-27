@@ -32,3 +32,10 @@ export interface RxjsStoreOperator<
     key: T
     callback: V
 }
+
+export interface RxjsStoreMiddleware<
+    S extends Record<string, any> = Record<string, any>,
+    T extends Action = Action
+> {
+    ( store: RxJsStore<S, T> ) : ( next: ( a: T ) => any ) => ( action: T ) => any
+}

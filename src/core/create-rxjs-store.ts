@@ -1,12 +1,13 @@
 import { BehaviorSubject, Observable, OperatorFunction, Subscription } from 'rxjs'
 import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter, map } from 'rxjs/operators'
-import { RxJsStore, WatchFunction , SubscribeFunction , Action as ActionGeneric, RxjsStoreOperator  } from '#types'
+import { RxJsStore, WatchFunction , SubscribeFunction , Action as ActionGeneric, RxjsStoreOperator, RxjsStoreMiddleware  } from '#types'
 
 /**
  * Function for creating an RxJS Store.
  * 
  * @param {( state: StoreState , action: Action ) => StoreState} rootReducer 
+ * @param {StoreState} initialState
  * 
  * @return {RxJsStore<StoreState, Action, SubscribeFunction, WatchFunction>} generated store
  */
@@ -14,10 +15,15 @@ const createRxjsStore = <
     StoreState = Record<string, any>,
     Action extends ActionGeneric = ActionGeneric,
 >(
-    rootReducer: ( state: StoreState , action: Action ) => StoreState
+    rootReducer: ( state: StoreState , action: Action ) => StoreState,
+    initialState?: StoreState,
+    appliedMiddleware?: RxjsStoreMiddleware<StoreState, Action>
 ): RxJsStore<StoreState, Action, SubscribeFunction, WatchFunction> => {
-    const _initialState = rootReducer( ( undefined as unknown ) as StoreState, {} as Action )
-    const state = new BehaviorSubject<StoreState>( _initialState )
+    if ( ! initialState ) {
+        initialState = rootReducer( ( undefined as unknown ) as StoreState, {} as Action )
+    }
+
+    const state = new BehaviorSubject<StoreState>( initialState as StoreState )
 
     const action = new BehaviorSubject<Action | { type: 'INITIALIZE_STORE' }>( { type: 'INITIALIZE_STORE' } )
 
@@ -86,10 +92,6 @@ const createRxjsStore = <
         },
     } )
 
-    const dispatch = ( newAction: Action ) => {
-        action.next( newAction )
-    }
-
     const subscribe = ( subscribeFunction: SubscribeFunction<StoreState> ): () => any => {
         listeners.push( { key: ++ count, subscribeFunction } )
         const key = count
@@ -102,6 +104,11 @@ const createRxjsStore = <
     const addWatcher = ( type: Action["type"], watchFunction: WatchFunction ) => {
         watchers.push( { type, watchFunction } )
         watchersListener.next( watchers )
+    }
+
+    const dispatch = ( newAction: Action ) => {
+        const next = ( val: Action ) => action.next( val ) 
+        appliedMiddleware ? appliedMiddleware( { getState, subscribe, dispatch, addWatcher } )( next )( newAction ) : next( newAction )
     }
 
     return { getState, subscribe, dispatch, addWatcher }
