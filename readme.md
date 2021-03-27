@@ -10,7 +10,7 @@ import { createRxjsStore } from 'rxjs-store'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
-    counter: 0
+    counter: 0,
     pinging: false
 }
 
