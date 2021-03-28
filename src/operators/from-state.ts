@@ -8,8 +8,8 @@ const fromState = <
 >( stateCallback: Callback  ): RxjsStoreOperator<RxjsStoreOperatorFromStateKey> => {
     return {
         key: 'fromState',
-        callback: ( args: any ): Store | Partial<Store> => {
-            return stateCallback( args.store, args.action )
+        callback: ( args ): Store | Partial<Store> => {
+            return stateCallback( args.store as Store, args.action as Action )
         }
     }
 }

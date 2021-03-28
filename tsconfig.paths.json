@@ -2,6 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+        "#constants/*": ["src/constantes/*"],
         "#core": ["src/core/index"],
         "#operators": ["src/operators/index"],
         "#templates/*": ["src/templates/*"],
