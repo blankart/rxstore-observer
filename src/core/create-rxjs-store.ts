@@ -13,8 +13,8 @@ import {
     SubscriptionListener,
     RxjsStoreOperator
 } from '#types'
-import { INIT, INITType } from 'src/constants/init'
-import createWatchersFactory from './create-watcher-factor'
+import { INIT, INITType } from '#constants/init'
+import createWatchersFactory from './create-watcher-factory'
 
 /**
  * Function for creating an RxJS Store.
@@ -78,13 +78,6 @@ const createRxjsStore = <
         }
     } )
 
-    /**
-     * Watchers are the sagas of Rxjs Store. It subscribes to a single action type
-     * to do side-effects using pipe and Rxjs operators.
-     * ```
-     * store.addWatcher( 'DO_SOMETHING', pipe => pipe( mapTo({ type: 'THEN_DO_THIS' }) ) );
-     * ```
-     */
     const watchers: Array<WatchListener<ActionType<Action>, WatchFunction<Action>>> = []
     const watchersListener = new BehaviorSubject<Array<WatchListener<ActionType<Action>, WatchFunction<Action>>>>( [] )
     let watchersSubscriptions: Array<Subscription> = []
