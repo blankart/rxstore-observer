@@ -1,5 +1,13 @@
 import { Action as GenericAction, RxJsStore, RxjsStoreMiddleware } from '#types'
+import shallowEqual from '#utils/shallow-equal'
 
+/**
+ * Utility function for composing a middleware function
+ * from multiple sources.
+ * 
+ * @param {...Array<RxjsStoreMiddleware<any, any>>} middlewares 
+ * @return {RxjsStoreMiddleware<StoreState, Action>} composed middleware.
+ */
 const applyMiddleware = <
     StoreState extends Record<string, any>,
     Action extends GenericAction
@@ -19,7 +27,7 @@ const applyMiddleware = <
                 currentAction = newAction
             }
 
-            if ( JSON.stringify( currentAction ) !== JSON.stringify( newAction ) ) {
+            if ( ! shallowEqual( currentAction, newAction ) || JSON.stringify( currentAction ) !== JSON.stringify( newAction ) ) {
                 next( currentAction )
                 currentAction = newAction
             }

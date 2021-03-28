@@ -6,7 +6,8 @@
         "#core": ["src/core/index"],
         "#operators": ["src/operators/index"],
         "#templates/*": ["src/templates/*"],
-        "#types": ["src/types/index"]
+        "#types": ["src/types/index"],
+        "#utils/*": ["src/utils/*"]
     }
   }
 }

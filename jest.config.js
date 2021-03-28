@@ -16,6 +16,7 @@ module.exports = {
     },
     "moduleNameMapper": {
         "#core": "<rootDir>/src/core",
-        "#templates/(.*)": "<rootDir>/src/templates/$1"
+        "#templates/(.*)": "<rootDir>/src/templates/$1",
+        "#constantes/(.*)": "<rootDir>/src/constants/$1"
     }
 }
