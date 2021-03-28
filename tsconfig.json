@@ -1,6 +1,6 @@
 {
-  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
+    "baseUrl": "./src",
     "target": "esnext",
     "lib": [
       "dom",
@@ -15,12 +15,25 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "commonjs",
+    "outDir": "./dist",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "removeComments": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+        "#constants/*": ["constants/*"],
+        "#core": ["core/index"],
+        "#operators": ["operators/index"],
+        "#templates/*": ["templates/*"],
+        "#types": ["types/index"],
+        "#utils/*": ["utils/*"]
+    }
   },
+  "exclude": [
+    "node_modules"
+  ],
   "include": [
-    "src"
+    "./src/**/*.ts"
   ]
 }
