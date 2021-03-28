@@ -6,7 +6,7 @@ This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxjsStore, applyMiddleware } from 'rxjs-store'
+import { createRxjsStore, applyMiddleware } from 'rxstore-watch'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
