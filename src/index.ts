@@ -10,3 +10,7 @@ export {
     WatchListener,
     SubscriptionListener
 } from './types'
+
+export {
+    fromState
+} from './operators'
