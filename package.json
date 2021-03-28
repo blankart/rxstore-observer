@@ -1,24 +1,48 @@
 {
   "name": "rxstore-watch",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "React state management tool using RxJS",
-  "repository": "blankart/rxjs-store",
-  "main": "dist/index.js",
+  "repository": "blankart/rxstore-watch",
+  "main": "lib/rxstore-watch.js",
+  "unpkg": "dist/rxstore-watch.js",
+  "module": "es/rxstore-watch.js",
+  "browser": "dist/rxstore-watch.js",
+  "types": "types/index.ts",
+  "files": [
+    "dist",
+    "src",
+    "es",
+    "lib",
+    "types"
+  ],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
   "scripts": {
     "dev": "nodemon",
     "test": "jest --no-cache",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "build": "rollup -c"
   },
   "author": "Nico Mendoza",
   "license": "ISC",
   "dependencies": {
-    "@types/react": "^17.0.3",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "@babel/runtime": "^7.13.10",
     "rxjs": "^6.6.6",
     "typescript": "^4.2.3"
   },
   "devDependencies": {
+    "@babel/core": "^7.13.13",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.13.12",
+    "@rollup/plugin-alias": "^3.1.2",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "@rollup/plugin-replace": "^2.4.2",
+    "@rollup/plugin-typescript": "^8.2.1",
     "@testing-library/react": "^11.2.5",
     "@types/jest": "^26.0.22",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
@@ -27,9 +51,14 @@
     "eslint-plugin-react": "^7.23.1",
     "jest": "^26.6.3",
     "nodemon": "^2.0.7",
+    "rollup": "^2.43.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript-paths": "^1.2.2",
+    "rollup-plugin-typescript2": "^0.30.0",
     "ts-jest": "^26.5.4",
     "ts-node": "^9.1.1",
-    "tsconfig-paths": "^3.9.0"
+    "tsconfig-paths": "^3.9.0",
+    "tslib": "^2.1.0"
   },
   "nodemonConfig": {
     "watch": [

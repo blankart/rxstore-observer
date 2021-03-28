@@ -6,7 +6,6 @@ module.exports =  { //eslint-disable-line
     "extends": [
         "eslint:recommended", 
         "plugin:@typescript-eslint/recommended",
-        "plugin:react/recommended"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -23,12 +22,7 @@ module.exports =  { //eslint-disable-line
         "object-curly-spacing": [ "error", "always" ],
         semi: [ 'error', 'never' ],
         'space-in-parens': [ 'error', 'always' ],
-        "react/prop-types": "off",
-        "react/no-unescaped-entities": "off",
         'template-curly-spacing': [ 'error', 'always' ],
-        "react/jsx-curly-spacing": [ 2, { "when": "always", "spacing": {
-            "objectLiterals": "always"
-        }, "children": true } ],
         'array-bracket-spacing': [ 'error', 'always' ],
         'computed-property-spacing': [ 'error', 'always' ],
         'linebreak-style': 'off',
@@ -43,9 +37,7 @@ module.exports =  { //eslint-disable-line
                 nonwords: true,
             } ],
     },
-    "settings": {
-        "react": {
-            "version": "detect"
-        }
+    "globals": {
+        "__dirname": true
     }
 }
