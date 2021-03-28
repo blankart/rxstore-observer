@@ -1,13 +1,13 @@
 {
   "name": "rxstore-watch",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "React state management tool using RxJS",
   "repository": "blankart/rxstore-watch",
   "main": "lib/rxstore-watch.js",
   "unpkg": "dist/rxstore-watch.js",
   "module": "es/rxstore-watch.js",
   "browser": "dist/rxstore-watch.js",
-  "types": "types/index.ts",
+  "types": "types/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -22,9 +22,12 @@
   },
   "scripts": {
     "dev": "nodemon",
+    "dev:ts": "tsc -w",
     "test": "jest --no-cache",
     "lint": "eslint src/**/*.ts",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir types",
+    "build:types:operators": "tsc src/operators/index.ts --declaration --emitDeclarationOnly --outDir types/operators"
   },
   "author": "Nico Mendoza",
   "license": "ISC",
@@ -37,7 +40,6 @@
     "@babel/core": "^7.13.13",
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
-    "@rollup/plugin-alias": "^3.1.2",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",

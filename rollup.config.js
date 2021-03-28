@@ -3,22 +3,10 @@ import babel from '@rollup/plugin-babel'
 import replace from '@rollup/plugin-replace'
 import typescript from '@rollup/plugin-typescript'
 import { terser } from 'rollup-plugin-terser'
-import alias from '@rollup/plugin-alias'
-import path from 'path'
 
 import pkg from './package.json'
-import tsconfig from './tsconfig.json'
 
 const extensions = [ '.ts' ]
-
-const aliasEntries =  Object.keys( tsconfig.compilerOptions.paths ).map( alias => {
-    const find = alias.split( '/' )[ 0 ]
-    const replacements = tsconfig.compilerOptions.paths[ alias ][ 0 ].split( '/' ).filter( p => p !== '*' )
-    return {
-        find,
-        replacement: path.resolve( __dirname, 'src', ...replacements )
-    }
-} )
 
 const babelRuntimeVersion = pkg.dependencies[ '@babel/runtime' ].replace(
     /^[^0-9]*/,
@@ -43,7 +31,6 @@ export default [
             ...Object.keys( pkg.peerDependencies || {} ),
         ] ),
         plugins: [
-            alias( { entries: aliasEntries } ),
             nodeResolve( {
                 extensions,
             } ),
@@ -67,7 +54,6 @@ export default [
             ...Object.keys( pkg.peerDependencies || {} ),
         ] ),
         plugins: [
-            alias( { entries: aliasEntries } ),
             nodeResolve( {
                 extensions,
             } ),
@@ -90,7 +76,6 @@ export default [
         input: 'src/index.ts',
         output: { file: 'es/rxstore-watch.mjs', format: 'es', indent: false },
         plugins: [
-            alias( { entries: aliasEntries } ),
             nodeResolve( {
                 extensions,
             } ),
@@ -123,7 +108,6 @@ export default [
             indent: false,
         },
         plugins: [
-            alias( { entries: aliasEntries } ),
             nodeResolve( {
                 extensions,
             } ),
@@ -148,7 +132,6 @@ export default [
             indent: false,
         },
         plugins: [
-            alias( { entries: aliasEntries } ),
             nodeResolve( {
                 extensions,
             } ),

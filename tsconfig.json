@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "target": "esnext",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
-    "allowJs": true,
+    "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -15,19 +15,11 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "outDir": "./dist",
+    "outDir": "./build",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "removeComments": true,
     "noEmit": true,
-    "paths": {
-        "#constants/*": ["constants/*"],
-        "#core": ["core/index"],
-        "#operators": ["operators/index"],
-        "#templates/*": ["templates/*"],
-        "#types": ["types/index"],
-        "#utils/*": ["utils/*"]
-    }
   },
   "exclude": [
     "node_modules"

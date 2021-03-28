@@ -1,4 +1,4 @@
-import { Action, RxjsStoreOperator, WatchFunction, WatchListener, ActionType } from "#types"
+import { Action, RxjsStoreOperator, WatchFunction, WatchListener, ActionType } from "../types"
 import { OperatorFunction, BehaviorSubject } from "rxjs"
 import { map } from 'rxjs/operators'
 

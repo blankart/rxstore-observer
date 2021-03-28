@@ -1,5 +1,5 @@
-import { initialState, reducer, State, Action } from '#templates/mock-store'
-import { RxjsStoreMiddleware } from '#types'
+import { initialState, reducer, State, Action } from '../../templates/mock-store'
+import { RxjsStoreMiddleware } from '../../types'
 import applyMiddleware from '../apply-middleware'
 import createRxjsStore from '../create-rxjs-store'
 

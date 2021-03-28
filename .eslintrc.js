@@ -20,7 +20,7 @@ module.exports =  { //eslint-disable-line
         "@typescript-eslint/indent": [ "error", 4, { "FunctionDeclaration": { parameters: 2 } } ],
         "@typescript-eslint/no-explicit-any": "off",
         "object-curly-spacing": [ "error", "always" ],
-        semi: [ 'error', 'never' ],
+        'semi': [ 'error', 'never' ],
         'space-in-parens': [ 'error', 'always' ],
         'template-curly-spacing': [ 'error', 'always' ],
         'array-bracket-spacing': [ 'error', 'always' ],

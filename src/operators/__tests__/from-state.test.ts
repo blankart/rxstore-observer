@@ -1,5 +1,5 @@
-import { createRxjsStore } from '#core'
-import { reducer } from '#templates/mock-store'
+import { createRxjsStore } from '../../core'
+import { reducer } from '../../templates/mock-store'
 import { map, mapTo } from 'rxjs/operators'
 import fromState from '../from-state'
 

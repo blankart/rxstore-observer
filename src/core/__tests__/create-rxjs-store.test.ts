@@ -1,6 +1,6 @@
 import createRxjsStore from '../create-rxjs-store'
 import { map } from 'rxjs/operators'
-import { Action, reducer, initialState } from '#templates/mock-store'
+import { Action, reducer, initialState } from '../../templates/mock-store'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {

@@ -1,4 +1,4 @@
-import { Action, RxjsStoreOperator } from "#types"
+import { Action, RxjsStoreOperator } from "../types"
 
 type RxjsStoreOperatorFromStateKey = 'fromState' 
 
