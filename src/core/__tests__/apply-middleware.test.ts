@@ -1,14 +1,14 @@
 import { initialState, reducer, State, Action } from '../../templates/mock-store'
-import { RxjsStoreMiddleware } from '../../types'
+import { RxStoreMiddleware } from '../../types'
 import applyMiddleware from '../apply-middleware'
-import createRxjsStore from '../create-rxjs-store'
+import createRxStore from '../create-rxjs-store'
 
 describe( 'applyMiddleware', () => {
     test( 'Registered middleware should be called', () => {
         const mockFunction1 = jest.fn()
         const mockFunction2 = jest.fn()
         const mockFunction3 = jest.fn()
-        const mockMiddleware1: RxjsStoreMiddleware = () => next => action => {
+        const mockMiddleware1: RxStoreMiddleware = () => next => action => {
             mockFunction1()
             if ( action.payload === `Changed 18 time(s)` ) {
                 next( { type: 'CHANGE_DUMMY_FIELD_2', payload: 'Changed value' } )
@@ -16,17 +16,17 @@ describe( 'applyMiddleware', () => {
             next( action )
         }
 
-        const mockMiddleware2: RxjsStoreMiddleware = () => next => action => {
+        const mockMiddleware2: RxStoreMiddleware = () => next => action => {
             mockFunction2()
             next( action )
         }
 
-        const mockMiddleware3: RxjsStoreMiddleware = () => next => action => {
+        const mockMiddleware3: RxStoreMiddleware = () => next => action => {
             mockFunction3()
             next( action )
         }
 
-        const dummyStore = createRxjsStore( reducer, initialState, applyMiddleware<State, Action>( mockMiddleware1, mockMiddleware2, mockMiddleware3 ) )
+        const dummyStore = createRxStore( reducer, initialState, applyMiddleware<State, Action>( mockMiddleware1, mockMiddleware2, mockMiddleware3 ) )
 
         for ( let i = 1; i <= 20; i ++ ) {
             dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: `Changed ${ i } time(s)` } )
@@ -42,20 +42,28 @@ describe( 'applyMiddleware', () => {
     } )
 
     test( 'Test simple thunk middleware', () => {
-        const simpleThunkMiddleware: RxjsStoreMiddleware = store => next => ( action: any ) => {
+        const mockFunction = jest.fn()
+        const simpleThunkMiddleware: RxStoreMiddleware = store => next => ( action: any ) => {
             if ( typeof action === 'function' ) {
                 return action( store.dispatch )
             }
             return next( action )
         } 
-        const dummyStore = createRxjsStore( reducer, initialState, applyMiddleware<State, Action>( simpleThunkMiddleware ) )
-        dummyStore.dispatch<( ...a: any ) => void>( dispatch => {
-            dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
-            dispatch( { type: 'CHANGE_DUMMY_FIELD_2', payload: 'Changed value' } )
-            dispatch( { type: 'CHANGE_DUMMY_FIELD_3', payload: 'Changed value' } )
-        } )
-        expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
-        expect( dummyStore.getState().dummyField2 ).toBe( 'Changed value' )
-        expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value' )
+
+        const anotherMiddleware: RxStoreMiddleware = () => next => ( action: any ) => {
+            mockFunction()
+            next( action )
+        }
+
+        const dummyStore = createRxStore( reducer, initialState, applyMiddleware<State, Action>( simpleThunkMiddleware, anotherMiddleware ) )
+        dummyStore.dispatch( ( ( dispatch: ( ...args: any ) => any ) => {
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value 1' } ) 
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_2', payload: 'Changed value 2' } ) 
+            dispatch( { type: 'CHANGE_DUMMY_FIELD_3', payload: 'Changed value 3' } ) 
+        } ) as unknown as Action )
+        expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value 1' )
+        expect( dummyStore.getState().dummyField2 ).toBe( 'Changed value 2' )
+        expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value 3' )
+        expect( mockFunction ).toBeCalledTimes( 3 )
     } )
 } )

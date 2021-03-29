@@ -1,14 +1,13 @@
-export { createRxjsStore } from './core'
+export { createRxStore, applyMiddleware, createWatcher } from './core'
 export { 
-    RxJsStore,
+    RxStore,
     WatchFunction,
     SubscribeFunction,
     Action,
     ActionType,
-    RxjsStoreMiddleware,
-    RxjsReducer,
+    RxStoreMiddleware,
+    RxReducer,
     WatchListener,
-    SubscriptionListener
 } from './types'
 
 export {

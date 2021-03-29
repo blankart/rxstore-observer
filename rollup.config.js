@@ -80,6 +80,7 @@ export default [
                 extensions,
             } ),
             replace( {
+                preventAssignment: true,
                 'process.env.NODE_ENV': JSON.stringify( 'production' ),
             } ),
             typescript( { declaration: false } ),
@@ -117,6 +118,7 @@ export default [
                 exclude: 'node_modules/**',
             } ),
             replace( {
+                preventAssignment: true,
                 'process.env.NODE_ENV': JSON.stringify( 'development' ),
             } ),
         ],
@@ -141,6 +143,7 @@ export default [
                 exclude: 'node_modules/**',
             } ),
             replace( {
+                preventAssignment: true,
                 'process.env.NODE_ENV': JSON.stringify( 'production' ),
             } ),
             terser( {

@@ -2,36 +2,37 @@ import { BehaviorSubject, Observable, Subscription, OperatorFunction } from 'rxj
 import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter } from 'rxjs/operators'
 import { 
-    RxJsStore, 
+    RxStore, 
     WatchFunction , 
     SubscribeFunction , 
     Action, 
-    RxjsStoreMiddleware, 
-    RxjsReducer,  
+    RxStoreMiddleware, 
+    RxReducer,  
     WatchListener,
     ActionType,
-    SubscriptionListener,
-    RxjsStoreOperator
+    RxStoreOperator,
+    RxWatcher
 } from '../types'
 import { INIT, INITType } from '../constants/init'
 import createWatchersFactory from './create-watcher-factory'
+import createWatcher from './create-watcher'
 
 /**
  * Function for creating an RxJS Store.
  * 
- * @param {RxjsReducer<S, T>} rootReducer 
+ * @param {RxReducer<S, T>} rootReducer 
  * @param {S} initialState
  * 
- * @return {RxJsStore<S, T, SubscribeFunction, WatchFunction>} generated store
+ * @return {RxStore<S, T, SubscribeFunction, WatchFunction>} generated store
  */
-const createRxjsStore = <
+const createRxStore = <
     S extends Record<string, any>,
     T extends Action,
 >(
-    rootReducer: RxjsReducer<S, T>,
+    rootReducer: RxReducer<S, T>,
     initialState?: S,
-    appliedMiddleware?: RxjsStoreMiddleware<S, T>
-): RxJsStore<S, T, SubscribeFunction<S>, WatchFunction<T>> => {
+    appliedMiddleware?: RxStoreMiddleware<S, T>
+): RxStore<S, T> => {
     if ( typeof rootReducer !== 'function' ) {
         throw new Error( 'Invalid reducer parameter. Reducer must be of type `function`.' )
     }
@@ -52,14 +53,6 @@ const createRxjsStore = <
      */
     const state = new BehaviorSubject<S>( initialState as S )
     const getState = () => state.getValue() as S
-
-    let listenersCount = 0
-    const listeners: Array<SubscriptionListener<S>> = []
-    state.subscribe( {
-        next: newState => {
-            listeners.forEach( listener => listener.subscribeFunction( newState as S ) )
-        }
-    } )
 
     /**
      * Actions are objects which has a type and a payload.
@@ -86,10 +79,10 @@ const createRxjsStore = <
             watchersSubscriptions.forEach( subscription => subscription.unsubscribe() )
             watchersSubscriptions = []
             newWatchers.forEach( newWatcher => {
-                const pipes = createWatchersFactory<S, T>( state, newWatcher )
+                const pipes = createWatchersFactory<S, T>( state, dispatch, newWatcher )
                 const observable = ( pipeFromArray( [ 
                     filter( ( pipedAction: T ) => pipedAction.type === newWatcher.type ),
-                    ...pipes as Array<OperatorFunction<T, unknown | RxjsStoreOperator<any, any>>>
+                    ...pipes as Array<OperatorFunction<T, unknown | RxStoreOperator<any, any>>>
                 ] )( action as Observable<T> ) ) as Observable<T>
                 
                 const subscription = observable.subscribe( {
@@ -103,27 +96,26 @@ const createRxjsStore = <
     } )
 
     const subscribe = ( subscribeFunction: SubscribeFunction<S> ): () => void => {
-        listeners.push( { key: ++ listenersCount, subscribeFunction } )
-        const key = listenersCount
+        const subscription = state.subscribe( { next: subscribeFunction } )
         return () => {
-            const newKey = listeners.findIndex( listener => listener.key === key )
-            listeners.splice( newKey, 1 )
+            subscription.unsubscribe()
         }
     }
 
-    const addWatcher = ( type: ActionType<T>, watchFunction: WatchFunction ) => {
-        watchers.push( { type, watchFunction } )
-        watchersListener.next( watchers )
+    const addWatcher = ( type: ActionType<T>, watchFunction: WatchFunction<T> ) => createWatcher<T>( type, watchFunction )( watchers, watchersListener )
+
+    const addWatchers = ( newWatchers: Array<RxWatcher<T>> ) => {
+        newWatchers.forEach( watcher => watcher( watchers, watchersListener ) )
     }
 
     const dispatch = ( newAction: T ) => {
         const next = ( val: T ): any => action.next( val ) 
         appliedMiddleware ? appliedMiddleware( 
-            ( { getState, subscribe, dispatch, addWatcher } ) as RxJsStore<S, T, SubscribeFunction<S>, WatchFunction<T>> 
+            ( { getState, subscribe, dispatch, addWatcher } ) as RxStore<S, T> 
         )( next )( newAction ) : next( newAction )
     }
 
-    return { getState, subscribe, dispatch, addWatcher } as RxJsStore<S, T, SubscribeFunction<S>, WatchFunction<T>>
+    return { getState, subscribe, dispatch, addWatcher, addWatchers } as RxStore<S, T>
 }
 
-export default createRxjsStore
+export default createRxStore

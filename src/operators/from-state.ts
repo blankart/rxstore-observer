@@ -1,15 +1,16 @@
-import { Action, RxjsStoreOperator } from "../types"
+import { Action, RxStoreOperator } from "../types"
 
-type RxjsStoreOperatorFromStateKey = 'fromState' 
+type FromStateOperator = 'fromState' 
 
 const fromState = <
-    Store extends Record<string, any> = Record<string, any>,
-    Callback extends ( state: Store, action: Action ) => Partial<Store> = ( state: Store ) => Partial<Store> 
->( stateCallback: Callback  ): RxjsStoreOperator<RxjsStoreOperatorFromStateKey> => {
+    S extends Record<string, any>,
+    T extends Action,
+    U extends ( state: S, action: T ) => any 
+>( stateCallback: U  ): RxStoreOperator<FromStateOperator> => {
     return {
         key: 'fromState',
-        callback: ( args ): Store | Partial<Store> => {
-            return stateCallback( args.store as Store, args.action as Action )
+        callback: ( args ): S | Partial<S> => {
+            return stateCallback( args.store as S, args.action as T )
         }
     }
 }

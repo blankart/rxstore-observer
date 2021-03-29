@@ -1,11 +1,11 @@
-import { createRxjsStore } from '../../core'
+import { createRxStore } from '../../core'
 import { reducer } from '../../templates/mock-store'
 import { map, mapTo } from 'rxjs/operators'
 import fromState from '../from-state'
 
 describe( 'fromState', () => {
     test( 'fromState should yield the current state value', () => {
-        const dummyStore = createRxjsStore( reducer )
+        const dummyStore = createRxStore( reducer )
 
         dummyStore.addWatcher( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             fromState( state => state.dummyField1 ),

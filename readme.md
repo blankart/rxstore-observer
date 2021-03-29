@@ -6,7 +6,7 @@ This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxjsStore, applyMiddleware } from 'rxstore-watch'
+import { createRxStore, applyMiddleware } from 'rxstore-watch'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
@@ -24,13 +24,13 @@ const reducer = (state = initialState, action) => {
     }
 }
 
-const store = createRxjsStore(reducer, initialState, applyMiddleware(yourAwesomeMiddleware))
+const store = createRxStore(reducer, initialState, applyMiddleware(yourAwesomeMiddleware))
 
 store.subscribe(currentState => {
     console.log('Current state: ', currentState) // { counter: 0, pinging: false }
 })
 
-dispatch({ type: 'INCREMENT' }) // { counter: 1, pinging: false }
+store.dispatch({ type: 'INCREMENT' }) // { counter: 1, pinging: false }
 
 
 // Create a watcher. 'PONG' will be dispatched everytime we dispatch 'PING' action.
@@ -38,6 +38,6 @@ store.addWatcher('PING', pipe => pipe(
     mapTo({ type: 'PONG' })
 ))
 
-dispatch({ type: 'PING' })  // { counter: 1, pinging: true }
+store.dispatch({ type: 'PING' })  // { counter: 1, pinging: true }
 console.log('Current state: ', store.getState()) // { counter: 1, pinging: false }
 ```

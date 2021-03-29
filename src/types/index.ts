@@ -1,10 +1,8 @@
-import { OperatorFunction } from 'rxjs'
+import { OperatorFunction, BehaviorSubject } from 'rxjs'
 
-export interface RxJsStore<
-    S = Record<string, any>,
-    V extends Action = Action,
-    U = SubscribeFunction<S>,
-    W = WatchFunction<V>
+export interface RxStore<
+    S extends Record<string, any>,
+    V extends Action,
 > {
     /**
      * Gets the current state value.
@@ -20,14 +18,14 @@ export interface RxJsStore<
      * 
      * @return {() => void} unsubscribe function
      */
-    subscribe: ( subscribeFunction: U ) => any
+    subscribe: ( subscribeFunction: SubscribeFunction<S> ) => any
     /**
      * Dispatch function accepts an action object which will be
      * dispatched to the reducer.
      * 
      * @param {T} action object
      */
-    dispatch: <T = V>( action: T ) => any
+    dispatch: ( action: V ) => any
     /**
      * Watchers are the sagas of Rxjs Store. It subscribes to a single action type
      * to do side-effects using pipe and Rxjs operators.
@@ -38,11 +36,26 @@ export interface RxJsStore<
      * @param {V["type"]} type action type to subscribe to.
      * @param {W} watchFunction callback function.
      */
-    addWatcher: ( type: V[ "type" ], watchFunction: W ) => any
+    addWatcher: ( type: V[ "type" ], watchFunction: WatchFunction<V> ) => any
+    /**
+     * Used to include all watchers at once instead of calling 
+     * `addWatcher` repeatedly. Added watchers must be of type `RxWatcher<Action>`.
+     * ```
+     * import { createWatcher } from 'rxstore-watch'
+     * const doSomethingWatcher = createWatcher( 'DO_SOMETHING', pipe => pipe( mapTo({ type: 'THEN_DO_THIS' })));
+     * const doStuffWatcher = createWatcher( 'DO_STUFF', pipe => pipe( mapTo({ type: 'THEN_DO_THAT' })));
+     * 
+     * store.addWatchers([
+     * doSomethingWatcher,
+     * doStuffWatcher
+     * ])
+     * ```
+     */
+    addWatchers: (  newWatchers: Array<RxWatcher<V>> ) => any
 }
 
 export interface WatchFunction<T = any> {
-    ( _pipe: ( ...args: Array<OperatorFunction<T, any> | RxjsStoreOperator<any, any>> ) => Array<OperatorFunction<T, any> | RxjsStoreOperator<any, any>> ): void
+    ( pipe: ( ...args: Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ) => Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ): void
 } 
 
 export interface SubscribeFunction<T = Record<string, any>> { 
@@ -56,31 +69,40 @@ export interface Action<T = any> {
 
 export type ActionType<T extends Action> = T["type"]
 
-export interface RxjsStoreOperator<
+export interface RxStoreOperator<
     T,
-    V extends ( args: { store: Record<string, any>, action: Action  } ) => any 
-    = ( args: { store: Record<string, any>, action: Action  } ) => any
+    V = ( args: { store: Record<string, any>, action: Action, dispatch: ( a: Action ) => any  } ) => any 
 > {
     key: T
     callback: V
 }
 
-export interface RxjsStoreMiddleware<
-    S = Record<string, any>,
+export interface RxStoreMiddleware<
+    S extends Record<string, any> = Record<string, any>,
     T extends Action = Action,
-    U = Action
 > {
-    ( store: RxJsStore<S, T> ) : ( next: ( a: T ) => any ) => ( a: U ) => any
+    ( store: RxStore<S, T> ) : ( next: ( a: T ) => any ) => ( a: any ) => any
 }
 
-export interface RxjsReducer<T, U> { ( state: T, action: U ): T }
+export interface RxReducer<T, U> { ( state: T, action: U ): T }
 
-export interface WatchListener<T extends string, U extends ( ...args: any ) => any> {
+export interface WatchListener<
+    T extends string, 
+    U extends ( ...args: any ) => any
+> {
     type: T,
     watchFunction: U
 }
 
-export interface SubscriptionListener<T extends Record<string, any>> {
-    key: number,
-    subscribeFunction: SubscribeFunction<T>
+export interface RxWatcher<T extends Action> {
+    ( 
+        a: Array<WatchListener<ActionType<T>, WatchFunction<T>>>,
+        b: BehaviorSubject<Array<WatchListener<ActionType<T>, WatchFunction<T>>>>
+    ): void
+}
+
+export interface RxDispatch<
+    S extends Action
+> {
+    ( a: S ): any
 }

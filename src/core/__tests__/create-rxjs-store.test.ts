@@ -1,10 +1,11 @@
-import createRxjsStore from '../create-rxjs-store'
+import createRxStore from '../create-rxjs-store'
 import { map } from 'rxjs/operators'
 import { Action, reducer, initialState } from '../../templates/mock-store'
+import createWatcher from '../create-watcher'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
-        const dummyStore = createRxjsStore( reducer )
+        const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState ).toBeTruthy()
         expect( dummyStore.getState() ).toEqual( initialState )
         expect( dummyStore.addWatcher ).toBeTruthy()
@@ -13,7 +14,7 @@ describe( 'createRxJsStore', () => {
     } )
 
     test( 'Store data manipulation', () => {
-        const dummyStore = createRxjsStore( reducer )
+        const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState() ).toEqual( initialState )
         dummyStore.dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
@@ -30,7 +31,7 @@ describe( 'createRxJsStore', () => {
     } )
 
     test( 'Store watchers', () => {
-        const dummyStore = createRxjsStore( reducer )
+        const dummyStore = createRxStore( reducer )
         dummyStore.addWatcher( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             map( ( value: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: value.payload } ) )
         ) )
@@ -56,7 +57,7 @@ describe( 'createRxJsStore', () => {
     } )
 
     test( 'Store subscription', () => {
-        const dummyStore = createRxjsStore( reducer )
+        const dummyStore = createRxStore( reducer )
         const mockFunction1 = jest.fn()
         const mockFunction2 = jest.fn()
         let count1 = 0
@@ -86,5 +87,27 @@ describe( 'createRxJsStore', () => {
         expect( mockFunction2 ).toBeCalledTimes( 18 )
         expect( count2 ).toBe( 18 )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Count 20' )
+    } )
+
+    test( 'Register createWatcher instance inside addWatchers', () => {
+        const dummyStore = createRxStore( reducer )
+
+        const dummyWatcher1 = createWatcher<Action>( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+            map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: action.payload } ) )
+        ) )
+
+        const dummyWatcher2 = createWatcher<Action>( 'CHANGE_DUMMY_FIELD_2', pipe => pipe(
+            map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: action.payload } ) )
+        ) )
+
+        dummyStore.addWatchers( [
+            dummyWatcher1,
+            dummyWatcher2
+        ] )
+
+        dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )
+        expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
+        expect( dummyStore.getState().dummyField2 ).toBe( 'Changed value' )
+        expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value' )
     } )
 } )

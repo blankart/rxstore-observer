@@ -1,18 +1,18 @@
-import { Action, RxJsStore, RxjsStoreMiddleware } from '../types'
+import { Action, RxStore, RxStoreMiddleware } from '../types'
 import shallowEqual from '../utils/shallow-equal'
 
 /**
  * Utility function for composing a middleware function
  * from multiple sources.
  * 
- * @param {...Array<RxjsStoreMiddleware<any, any>>} middlewares 
- * @return {RxjsStoreMiddleware<S, T>} composed middleware.
+ * @param {...Array<RxStoreMiddleware<any, any>>} middlewares 
+ * @return {RxStoreMiddleware<S, T>} composed middleware.
  */
 const applyMiddleware = <
     S extends Record<string, any>,
     T extends Action
->( ...middlewares: Array<RxjsStoreMiddleware<any, any>> ): RxjsStoreMiddleware<S, T> => {
-    return ( ( store: RxJsStore<S, T> ) => ( next: ( action: T ) => any ) => ( action: T ): any => {
+>( ...middlewares: Array<RxStoreMiddleware<any, any>> ): RxStoreMiddleware<S, T> => {
+    return ( ( store: RxStore<S, T> ) => ( next: ( action: T ) => any ) => ( action: T ): any => {
         if ( middlewares.length === 0 ) {
             throw new Error( 'Invalid `applyMiddleware` parameter. Supply at least 1 middleware function.' )
         }
@@ -41,7 +41,7 @@ const applyMiddleware = <
         }
 
         middlewares[ count ]( store )( stackNext )( action )
-    } ) as RxjsStoreMiddleware<S, T>
+    } ) as RxStoreMiddleware<S, T>
 }
 
 export default applyMiddleware
