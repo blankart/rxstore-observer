@@ -41,7 +41,7 @@ describe( 'applyMiddleware', () => {
         expect( mockFunction3 ).toBeCalledTimes( 21 )
     } )
 
-    test( 'Test simple thunk middleware', () => {
+    test( 'Test middlewares', () => {
         const mockFunction = jest.fn()
         const simpleThunkMiddleware: RxStoreMiddleware = store => next => ( action: any ) => {
             if ( typeof action === 'function' ) {
@@ -56,6 +56,7 @@ describe( 'applyMiddleware', () => {
         }
 
         const dummyStore = createRxStore( reducer, initialState, applyMiddleware<State, Action>( simpleThunkMiddleware, anotherMiddleware ) )
+
         dummyStore.dispatch( ( ( dispatch: ( ...args: any ) => any ) => {
             dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value 1' } ) 
             dispatch( { type: 'CHANGE_DUMMY_FIELD_2', payload: 'Changed value 2' } ) 

@@ -3,6 +3,17 @@ import { Action, RxDispatch,RxStoreOperator } from "../types"
 
 type FromDispatchOperator = 'fromState' 
 
+/**
+ * An Rxstore Watch custom operator for accessing the dispatch function.
+ * This is not an actual implementation of Rxjs Operator. But instead,
+ * it runs a `map` function that accepts the current dispatch function 
+ * of the store.
+ * 
+ * Just like a regular map function, it can return any values after
+ * the call. 
+ * 
+ * @param {U} dispatchCallback dispatch callback function.
+ */
 const fromDispatch = <
     T extends Action,
     U extends ( d: RxDispatch<T>, a: T ) => any 

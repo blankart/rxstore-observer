@@ -14,10 +14,4 @@ module.exports = {
             "tsconfig": "tsconfig.json"
         }
     },
-    "moduleNameMapper": {
-        "#core": "<rootDir>/src/core",
-        "#templates/(.*)": "<rootDir>/src/templates/$1",
-        "#constants/(.*)": "<rootDir>/src/constants/$1",
-        "#utils/(.*)": "<rootDir>/src/utils/$1"
-    }
 }

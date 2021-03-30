@@ -62,7 +62,7 @@ export interface SubscribeFunction<T = Record<string, any>> {
     ( store: T ): any 
 }
 
-export interface Action<T = any> {
+export type Action<T = any> =  {
     type: T,
     [key: string]: any
 }
@@ -84,7 +84,7 @@ export interface RxStoreMiddleware<
     ( store: RxStore<S, T> ) : ( next: ( a: T ) => any ) => ( a: any ) => any
 }
 
-export interface RxReducer<T, U> { ( state: T, action: U ): T }
+export type RxReducer<T, U> = ( state: T | undefined, action: U ) => T
 
 export interface WatchListener<
     T extends string, 
@@ -106,3 +106,20 @@ export interface RxDispatch<
 > {
     ( a: S ): any
 }
+
+/**
+ * @see https://github.com/reduxjs/redux
+ */
+export type RxReducersMapObject<
+    S = Record<string, any>, 
+    A extends Action = Action
+> = {
+  [ K in keyof S ]: RxReducer<S[ K ], A>
+}
+
+/**
+ * @see https://github.com/reduxjs/redux
+ */
+export type StateFromReducersMapObject<M> = M extends RxReducersMapObject
+  ? { [ P in keyof M ]: M[ P ] extends RxReducer<infer S, any> ? S : never }
+  : never

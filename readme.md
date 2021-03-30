@@ -1,4 +1,4 @@
-# RxJS Store
+# RxStore Watch
 
 A state management tool using RxJS
 
