@@ -4,7 +4,7 @@ type FromStateOperator = 'fromState'
 
 /**
  * An Rxstore Watch custom operator for accessing the store state.
- * This is not an actual implementation of Rxjs Operator. But instead,
+ * This is not an actual implementation of an Rxjs Operator. But instead,
  * it runs a `map` function that accepts the current state of the store.
  * 
  * It does not accept any return function. Instead, the current action object

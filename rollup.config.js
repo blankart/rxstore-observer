@@ -75,6 +75,10 @@ export default [
     {
         input: 'src/index.ts',
         output: { file: 'es/rxstore-watch.mjs', format: 'es', indent: false },
+        external: makeExternalPredicate( [
+            ...Object.keys( pkg.dependencies || {} ),
+            ...Object.keys( pkg.peerDependencies || {} ),
+        ] ),
         plugins: [
             nodeResolve( {
                 extensions,
@@ -108,6 +112,10 @@ export default [
             name: 'Rxstore Watch',
             indent: false,
         },
+        external: makeExternalPredicate( [
+            ...Object.keys( pkg.dependencies || {} ),
+            ...Object.keys( pkg.peerDependencies || {} ),
+        ] ),
         plugins: [
             nodeResolve( {
                 extensions,
@@ -133,6 +141,10 @@ export default [
             name: 'Rxstore Watch',
             indent: false,
         },
+        external: makeExternalPredicate( [
+            ...Object.keys( pkg.dependencies || {} ),
+            ...Object.keys( pkg.peerDependencies || {} ),
+        ] ),
         plugins: [
             nodeResolve( {
                 extensions,
