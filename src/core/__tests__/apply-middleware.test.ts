@@ -1,7 +1,7 @@
 import { initialState, reducer, State, Action } from '../../templates/mock-store'
 import { RxStoreMiddleware } from '../../types'
 import applyMiddleware from '../apply-middleware'
-import createRxStore from '../create-rxjs-store'
+import createRxStore from '../create-rx-store'
 
 describe( 'applyMiddleware', () => {
     test( 'Registered middleware should be called', () => {

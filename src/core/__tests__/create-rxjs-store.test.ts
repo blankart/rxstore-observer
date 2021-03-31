@@ -1,4 +1,4 @@
-import createRxStore from '../create-rxjs-store'
+import createRxStore from '../create-rx-store'
 import { map } from 'rxjs/operators'
 import { Action, reducer, initialState } from '../../templates/mock-store'
 import createObserver from '../create-observer'

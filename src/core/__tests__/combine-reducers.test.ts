@@ -1,5 +1,5 @@
 import combineReducers from '../combine-reducers'
-import createRxStore from '../create-rxjs-store'
+import createRxStore from '../create-rx-store'
 
 describe( 'combineReducers', () => {
     test( 'multiple reducers to return the right state', () => {
