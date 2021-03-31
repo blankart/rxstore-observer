@@ -25,7 +25,7 @@ export default [
     // CommonJS
     {
         input: 'src/index.ts',
-        output: { file: 'lib/rxstore-watch.js', format: 'cjs', indent: false },
+        output: { file: 'lib/rxstore-observer.js', format: 'cjs', indent: false },
         external: makeExternalPredicate( [
             ...Object.keys( pkg.dependencies || {} ),
             ...Object.keys( pkg.peerDependencies || {} ),
@@ -48,7 +48,7 @@ export default [
     // ES
     {
         input: 'src/index.ts',
-        output: { file: 'es/rxstore-watch.js', format: 'es', indent: false },
+        output: { file: 'es/rxstore-observer.js', format: 'es', indent: false },
         external: makeExternalPredicate( [
             ...Object.keys( pkg.dependencies || {} ),
             ...Object.keys( pkg.peerDependencies || {} ),
@@ -74,7 +74,7 @@ export default [
     // ES for Browsers
     {
         input: 'src/index.ts',
-        output: { file: 'es/rxstore-watch.mjs', format: 'es', indent: false },
+        output: { file: 'es/rxstore-observer.mjs', format: 'es', indent: false },
         external: makeExternalPredicate( [
             ...Object.keys( pkg.dependencies || {} ),
             ...Object.keys( pkg.peerDependencies || {} ),
@@ -107,9 +107,9 @@ export default [
     {
         input: 'src/index.ts',
         output: {
-            file: 'dist/rxstore-watch.js',
+            file: 'dist/rxstore-observer.js',
             format: 'umd',
-            name: 'Rxstore Watch',
+            name: 'Rxstore Observer',
             indent: false,
         },
         external: makeExternalPredicate( [
@@ -136,9 +136,9 @@ export default [
     {
         input: 'src/index.ts',
         output: {
-            file: 'dist/rxstore-watch.min.js',
+            file: 'dist/rxstore-observer.min.js',
             format: 'umd',
-            name: 'Rxstore Watch',
+            name: 'Rxstore Observer',
             indent: false,
         },
         external: makeExternalPredicate( [

@@ -9,7 +9,7 @@ type FromDispatchOperator = 'fromState'
  * it runs a `map` function that accepts the current dispatch function 
  * of the store.
  * 
- * It returns the action objects passed from the watcher.
+ * It returns the action objects passed from the observer.
  * 
  * @param {U} dispatchCallback dispatch callback function.
  */

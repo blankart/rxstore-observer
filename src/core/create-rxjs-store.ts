@@ -3,19 +3,19 @@ import { pipeFromArray } from 'rxjs/internal/util/pipe'
 import { filter } from 'rxjs/operators'
 import { 
     RxStore, 
-    WatchFunction , 
+    ObserverFunction , 
     SubscribeFunction , 
     Action, 
     RxStoreMiddleware, 
     RxReducer,  
-    WatchListener,
+    ObserveListener,
     ActionType,
     RxStoreOperator,
-    RxWatcher
+    RxObserver
 } from '../types'
 import { INIT, INITType } from '../constants/init'
-import createWatchersFactory from './create-watcher-factory'
-import createWatcher from './create-watcher'
+import createObserversFactory from './create-observer-factory'
+import createObserver from './create-observer'
 
 /**
  * Function for creating an RxJS Store.
@@ -23,7 +23,7 @@ import createWatcher from './create-watcher'
  * @param {RxReducer<S, T>} rootReducer 
  * @param {S} initialState
  * 
- * @return {RxStore<S, T, SubscribeFunction, WatchFunction>} generated store
+ * @return {RxStore<S, T, SubscribeFunction, ObserverFunction>} generated store
  */
 const createRxStore = <
     S extends Record<string, any>,
@@ -71,17 +71,17 @@ const createRxStore = <
         }
     } )
 
-    const watchers: Array<WatchListener<ActionType<T>, WatchFunction<T>>> = []
-    const watchersListener = new BehaviorSubject<Array<WatchListener<ActionType<T>, WatchFunction<T>>>>( [] )
-    let watchersSubscriptions: Array<Subscription> = []
-    watchersListener.subscribe( {
-        next: newWatchers => {
-            watchersSubscriptions.forEach( subscription => subscription.unsubscribe() )
-            watchersSubscriptions = []
-            newWatchers.forEach( newWatcher => {
-                const pipes = createWatchersFactory<S, T>( state, dispatch, newWatcher )
+    const observers: Array<ObserveListener<ActionType<T>, ObserverFunction<T>>> = []
+    const observersListener = new BehaviorSubject<Array<ObserveListener<ActionType<T>, ObserverFunction<T>>>>( [] )
+    let observersSubscriptions: Array<Subscription> = []
+    observersListener.subscribe( {
+        next: newObservers => {
+            observersSubscriptions.forEach( subscription => subscription.unsubscribe() )
+            observersSubscriptions = []
+            newObservers.forEach( newObserver => {
+                const pipes = createObserversFactory<S, T>( state, dispatch, newObserver )
                 const observable = ( pipeFromArray( [ 
-                    filter( ( pipedAction: T ) => pipedAction.type === newWatcher.type ),
+                    filter( ( pipedAction: T ) => pipedAction.type === newObserver.type ),
                     ...pipes as Array<OperatorFunction<T, unknown | RxStoreOperator<any, any>>>
                 ] )( action as Observable<T> ) ) as Observable<T>
                 
@@ -97,7 +97,7 @@ const createRxStore = <
                         dispatch( newAction )
                     }
                 } )
-                watchersSubscriptions.push( subscription )
+                observersSubscriptions.push( subscription )
             } )
         },
     } )
@@ -109,10 +109,10 @@ const createRxStore = <
         }
     }
 
-    const addWatcher = ( type: ActionType<T>, watchFunction: WatchFunction<T> ) => createWatcher<T>( type, watchFunction )( watchers, watchersListener )
+    const addObserver = ( type: ActionType<T>, observerFunction: ObserverFunction<T> ) => createObserver<T>( type, observerFunction )( observers, observersListener )
 
-    const addWatchers = ( newWatchers: Array<RxWatcher<T>> ) => {
-        newWatchers.forEach( watcher => watcher( watchers, watchersListener ) )
+    const addObservers = ( newObservers: Array<RxObserver<T>> ) => {
+        newObservers.forEach( observer => observer( observers, observersListener ) )
     }
 
     const dispatch = ( newAction: T ) => {
@@ -126,11 +126,11 @@ const createRxStore = <
         }
 
         appliedMiddleware ? appliedMiddleware( 
-            ( { getState, subscribe, dispatch, addWatcher } ) as RxStore<S, T> 
+            ( { getState, subscribe, dispatch, addObserver } ) as RxStore<S, T> 
         )( next )( newAction ) : next( newAction )
     }
 
-    return { getState, subscribe, dispatch, addWatcher, addWatchers } as RxStore<S, T>
+    return { getState, subscribe, dispatch, addObserver, addObservers } as RxStore<S, T>
 }
 
 export default createRxStore

@@ -1,14 +1,14 @@
-export { createRxStore, applyMiddleware, createWatcher, combineReducers } from './core'
+export { createRxStore, applyMiddleware, createObserver, combineReducers } from './core'
 export { 
     RxStore,
-    WatchFunction,
+    ObserverFunction,
     SubscribeFunction,
     Action,
     ActionType,
     RxStoreMiddleware,
     RxReducer,
-    WatchListener,
-    RxWatcher,
+    ObserveListener,
+    RxObserver,
     RxDispatch,
     RxReducersMapObject,
     StateFromReducersMapObject

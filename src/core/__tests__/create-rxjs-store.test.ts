@@ -1,14 +1,14 @@
 import createRxStore from '../create-rxjs-store'
 import { map } from 'rxjs/operators'
 import { Action, reducer, initialState } from '../../templates/mock-store'
-import createWatcher from '../create-watcher'
+import createObserver from '../create-observer'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
         const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState ).toBeTruthy()
         expect( dummyStore.getState() ).toEqual( initialState )
-        expect( dummyStore.addWatcher ).toBeTruthy()
+        expect( dummyStore.addObserver ).toBeTruthy()
         expect( dummyStore.subscribe ).toBeTruthy()
         expect( dummyStore.dispatch ).toBeTruthy()
     } )
@@ -30,12 +30,12 @@ describe( 'createRxJsStore', () => {
         expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value 2' )
     } )
 
-    test( 'Store watchers', () => {
+    test( 'Store observers', () => {
         const dummyStore = createRxStore( reducer )
-        dummyStore.addWatcher( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             map( ( value: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: value.payload } ) )
         ) )
-        dummyStore.addWatcher( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             map( ( value: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: value.payload } ) )
         ) )
         dummyStore.dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
@@ -89,20 +89,20 @@ describe( 'createRxJsStore', () => {
         expect( dummyStore.getState().dummyField1 ).toBe( 'Count 20' )
     } )
 
-    test( 'Register createWatcher instance inside addWatchers', () => {
+    test( 'Register createObserver instance inside addObservers', () => {
         const dummyStore = createRxStore( reducer )
 
-        const dummyWatcher1 = createWatcher<Action>( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+        const dummyObserver1 = createObserver<Action>( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: action.payload } ) )
         ) )
 
-        const dummyWatcher2 = createWatcher<Action>( 'CHANGE_DUMMY_FIELD_2', pipe => pipe(
+        const dummyObserver2 = createObserver<Action>( 'CHANGE_DUMMY_FIELD_2', pipe => pipe(
             map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: action.payload } ) )
         ) )
 
-        dummyStore.addWatchers( [
-            dummyWatcher1,
-            dummyWatcher2
+        dummyStore.addObservers( [
+            dummyObserver1,
+            dummyObserver2
         ] )
 
         dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )

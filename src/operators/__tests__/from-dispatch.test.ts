@@ -7,7 +7,7 @@ describe( 'fromDispatch', () => {
     test( 'fromState should yield the current state value', () => {
         const dummyStore = createRxStore( reducer )
 
-        dummyStore.addWatcher( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
             fromDispatch( ( dispatch, action ) => {
                 dispatch( { type: "CHANGE_DUMMY_FIELD_2", payload: action.payload } )
                 dispatch( { type: "CHANGE_DUMMY_FIELD_3", payload: action.payload } )

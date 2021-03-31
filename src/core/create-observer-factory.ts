@@ -1,17 +1,17 @@
-import { Action, RxStoreOperator, WatchFunction, WatchListener, ActionType, RxDispatch } from "../types"
+import { Action, RxStoreOperator, ObserverFunction, ObserveListener, ActionType, RxDispatch } from "../types"
 import { OperatorFunction, BehaviorSubject } from "rxjs"
 import { map } from 'rxjs/operators'
 
 /** @internal */
-const createWatchersFactory = <
+const createObserversFactory = <
     S extends Record<string, any>,
     T extends Action
 >( 
     state: BehaviorSubject<S>,
     dispatch: RxDispatch<T>,
-    watcher: WatchListener<ActionType<T>, WatchFunction<T>>
+    observer: ObserveListener<ActionType<T>, ObserverFunction<T>>
 ): Array<OperatorFunction<T, unknown> | RxStoreOperator<any, any>> => {
-    const pipes = ( watcher.watchFunction as unknown as ( ...args: any ) => any )( 
+    const pipes = ( observer.observerFunction as unknown as ( ...args: any ) => any )( 
         ( ...passedPipes: Array<OperatorFunction<T, unknown> | RxStoreOperator<any, any>> ) : Array<OperatorFunction<T, unknown> | RxStoreOperator<any, any>> => {
             const newPipes: Array<OperatorFunction<T, unknown> | RxStoreOperator<any, any>> = []
             for ( let i = 0; i < passedPipes.length; i ++ ) {
@@ -37,4 +37,4 @@ const createWatchersFactory = <
     return pipes
 }
 
-export default createWatchersFactory
+export default createObserversFactory

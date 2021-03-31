@@ -1,4 +1,4 @@
-# RxStore Watch
+# RxStore Observer
 
 A state management tool using RxJS
 
@@ -6,7 +6,7 @@ This project is currently in development.
 
 ### Usage:
 ```javascript
-import { createRxStore, applyMiddleware } from 'rxstore-watch'
+import { createRxStore, applyMiddleware } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 
 const initialState = {
@@ -24,17 +24,18 @@ const reducer = (state = initialState, action) => {
     }
 }
 
+// Any redux middlewares should work just fine!
 const store = createRxStore(reducer, initialState, applyMiddleware(yourAwesomeMiddleware))
 
-store.subscribe(currentState => {
-    console.log('Current state: ', currentState) // { counter: 0, pinging: false }
+store.subscribe(() => {
+    console.log('Current state: ', store.getState()) // { counter: 0, pinging: false }
 })
 
 store.dispatch({ type: 'INCREMENT' }) // { counter: 1, pinging: false }
 
 
-// Create a watcher. 'PONG' will be dispatched everytime we dispatch 'PING' action.
-store.addWatcher('PING', pipe => pipe(
+// Create an observer. 'PONG' will be dispatched everytime we dispatch 'PING' action.
+store.addObserver('PING', pipe => pipe(
     mapTo({ type: 'PONG' })
 ))
 
