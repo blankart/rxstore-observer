@@ -1,2 +1,2 @@
-export type INITType = 'INIT'
-export const INIT: INITType = 'INIT'
+export const INIT: INITType = '@@RXSTORE/INIT'
+export type INITType = '@@RXSTORE/INIT'
