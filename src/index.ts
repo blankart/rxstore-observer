@@ -13,7 +13,3 @@ export {
     RxReducersMapObject,
     StateFromReducersMapObject
 } from './types'
-
-export {
-    fromState
-} from './operators'

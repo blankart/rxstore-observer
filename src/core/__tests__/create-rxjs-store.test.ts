@@ -1,6 +1,6 @@
 import createRxStore from '../create-rx-store'
 import { map } from 'rxjs/operators'
-import { Action, reducer, initialState } from '../../templates/mock-store'
+import { Action, reducer, initialState, State } from '../../templates/mock-store'
 import createObserver from '../create-observer'
 
 describe( 'createRxJsStore', () => {
@@ -32,12 +32,17 @@ describe( 'createRxJsStore', () => {
 
     test( 'Store observers', () => {
         const dummyStore = createRxStore( reducer )
-        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
-            map( ( value: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: value.payload } ) )
+        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', $action => $action.pipe(
+            map( value => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: value.payload } ) )
         ) )
-        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
-            map( ( value: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: value.payload } ) )
-        ) )
+
+        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', $action => { 
+            return $action.pipe(
+                map( ( action: Action ) => { 
+                    return { type: 'CHANGE_DUMMY_FIELD_3', payload: action.payload }  
+                } )
+            )
+        } )
         dummyStore.dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
         expect( dummyStore.getState() ).toEqual( {
             dummyField1: 'Changed value',
@@ -92,11 +97,11 @@ describe( 'createRxJsStore', () => {
     test( 'Register createObserver instance inside addObservers', () => {
         const dummyStore = createRxStore( reducer )
 
-        const dummyObserver1 = createObserver<Action>( 'CHANGE_DUMMY_FIELD_1', pipe => pipe(
+        const dummyObserver1 = createObserver<State, Action>( 'CHANGE_DUMMY_FIELD_1', $action => $action.pipe(
             map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: action.payload } ) )
         ) )
 
-        const dummyObserver2 = createObserver<Action>( 'CHANGE_DUMMY_FIELD_2', pipe => pipe(
+        const dummyObserver2 = createObserver<State, Action>( 'CHANGE_DUMMY_FIELD_2', $action => $action.pipe(
             map( ( action: Action ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: action.payload } ) )
         ) )
 

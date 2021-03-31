@@ -8,11 +8,12 @@ import { Action, ActionType, RxObserver, ObserverFunction } from "../types"
  * @param {ObserverFunction<T>} observerFunction 
  */
 const createObserver = <
+    S extends Record<string, any>,
     T extends Action
 >( 
     type: ActionType<T>, 
-    observerFunction: ObserverFunction<T> 
-): RxObserver<T>  => {
+    observerFunction: ObserverFunction<S,T> 
+): RxObserver<S, T>  => {
     return ( observers, observersListener ) => {
         observers.push( { type, observerFunction } )
         observersListener.next( observers )

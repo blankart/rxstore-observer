@@ -1,5 +1,4 @@
-import { BehaviorSubject, Observable, Subscription, OperatorFunction } from 'rxjs'
-import { pipeFromArray } from 'rxjs/internal/util/pipe'
+import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { 
     RxStore, 
@@ -10,11 +9,9 @@ import {
     RxReducer,  
     ObserveListener,
     ActionType,
-    RxStoreOperator,
     RxObserver
 } from '../types'
 import { INIT, INITType } from '../constants/init'
-import createObserversFactory from './create-observer-factory'
 import createObserver from './create-observer'
 
 /**
@@ -51,8 +48,8 @@ const createRxStore = <
      * 
      * BehaviorSubject is used to subscribe to state changes. 
      */
-    const state = new BehaviorSubject<S>( initialState as S )
-    const getState = () => state.getValue() as S
+    const $state = new BehaviorSubject<S>( initialState as S )
+    const getState = () => $state.getValue() as S
 
     /**
      * Actions are objects which has a type and a payload.
@@ -63,29 +60,40 @@ const createRxStore = <
      * After every changes, the action is passed as the second argument
      * in the reducer function to change the current state.
      */
-    const action = new BehaviorSubject<T | { type: INITType }>( { type: INIT } )
-    action.subscribe( {
+    const $action = new BehaviorSubject<T | { type: INITType }>( { type: INIT } )
+    $action.subscribe( {
         next: newAction => {
             const newState = rootReducer( getState(), newAction as T )
-            state.next( newState )
+            $state.next( newState )
         }
     } )
 
-    const observers: Array<ObserveListener<ActionType<T>, ObserverFunction<T>>> = []
-    const observersListener = new BehaviorSubject<Array<ObserveListener<ActionType<T>, ObserverFunction<T>>>>( [] )
+    const observers: Array<ObserveListener<S,T>> = []
+    const observersListener = new BehaviorSubject<Array<ObserveListener<S,T>>>( [] )
     let observersSubscriptions: Array<Subscription> = []
     observersListener.subscribe( {
         next: newObservers => {
             observersSubscriptions.forEach( subscription => subscription.unsubscribe() )
             observersSubscriptions = []
             newObservers.forEach( newObserver => {
-                const pipes = createObserversFactory<S, T>( state, dispatch, newObserver )
-                const observable = ( pipeFromArray( [ 
-                    filter( ( pipedAction: T ) => pipedAction.type === newObserver.type ),
-                    ...pipes as Array<OperatorFunction<T, unknown | RxStoreOperator<any, any>>>
-                ] )( action as Observable<T> ) ) as Observable<T>
+                const $observable = newObserver.observerFunction(
+                    $action.pipe( 
+                        filter( passedAction => { 
+                            if ( newObserver.type === '*' ) {
+                                return true
+                            }
+
+                            if ( Array.isArray( newObserver.type ) ) {
+                                return newObserver.type.some( type => type === passedAction.type )
+                            }
+
+                            return passedAction.type === newObserver.type 
+                        }  )
+                    ) as Observable<T>,
+                    getState
+                )
                 
-                const subscription = observable.subscribe( {
+                const subscription = $observable.subscribe( {
                     next: newAction => {
                         /**
                          * If provided next action is null or undefined,
@@ -103,20 +111,20 @@ const createRxStore = <
     } )
 
     const subscribe = ( subscribeFunction: SubscribeFunction<T> ): () => void => {
-        const subscription = action.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
+        const subscription = $action.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
         return () => {
             subscription.unsubscribe()
         }
     }
 
-    const addObserver = ( type: ActionType<T>, observerFunction: ObserverFunction<T> ) => createObserver<T>( type, observerFunction )( observers, observersListener )
+    const addObserver = ( type: ActionType<T>, observerFunction: ObserverFunction<S,T> ) => createObserver<S,T>( type, observerFunction )( observers, observersListener )
 
-    const addObservers = ( newObservers: Array<RxObserver<T>> ) => {
+    const addObservers = ( newObservers: Array<RxObserver<S,T>> ) => {
         newObservers.forEach( observer => observer( observers, observersListener ) )
     }
 
     const dispatch = ( newAction: T ) => {
-        const next = ( val: T ): any => action.next( val ) 
+        const next = ( val: T ): any => $action.next( val ) 
         /**
          * If provided next action is null or undefined,
          * don't dispatch anything.

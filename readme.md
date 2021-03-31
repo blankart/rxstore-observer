@@ -35,7 +35,7 @@ store.dispatch({ type: 'INCREMENT' }) // { counter: 1, pinging: false }
 
 
 // Create an observer. 'PONG' will be dispatched everytime we dispatch 'PING' action.
-store.addObserver('PING', pipe => pipe(
+store.addObserver('PING', $action => $action.pipe(
     mapTo({ type: 'PONG' })
 ))
 

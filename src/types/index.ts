@@ -1,4 +1,4 @@
-import { OperatorFunction, BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
 
 export interface RxStore<
     S extends Record<string, any>,
@@ -31,19 +31,19 @@ export interface RxStore<
      * to do side-effects using pipe and Rxjs operators.
      * ```
      * import { mapTo } from 'rxjs/operators'
-     * store.addObserver( 'DO_SOMETHING', pipe => pipe( mapTo({ type: 'THEN_DO_THIS' }) ) );
+     * store.addObserver( 'DO_SOMETHING', $store => $store.pipe( mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
      * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
      */
-    addObserver: ( type: ActionType<V>, observerFunction: ObserverFunction<V> ) => any
+    addObserver: ( type: ActionType<V>, observerFunction: ObserverFunction<S, V> ) => any
     /**
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
      * ```
      * import { createObserver } from 'rxstore-watch'
-     * const doSomethingObserver = createObserver( 'DO_SOMETHING', pipe => pipe( mapTo({ type: 'THEN_DO_THIS' })));
-     * const doStuffObserver = createObserver( 'DO_STUFF', pipe => pipe( mapTo({ type: 'THEN_DO_THAT' })));
+     * const doSomethingObserver = createObserver( 'DO_SOMETHING', $store => $store.pipe( mapTo({ type: 'THEN_DO_THIS' })));
+     * const doStuffObserver = createObserver( 'DO_STUFF', $store => $store.pipe( mapTo({ type: 'THEN_DO_THAT' })));
      * 
      * store.addObservers([
      * doSomethingObserver,
@@ -51,11 +51,14 @@ export interface RxStore<
      * ])
      * ```
      */
-    addObservers: ( newObservers: Array<RxObserver<V>> ) => any
+    addObservers: ( newObservers: Array<RxObserver<S, V>> ) => any
 }
 
-export interface ObserverFunction<T = any> {
-    ( pipe: ( ...args: Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ) => Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ): void
+export interface ObserverFunction<
+    S extends Record<string, any>,
+    T extends Action,
+> {
+    ( $action: Observable<T>, getState: RxStore<S, T>[ "getState" ] ): Observable<T>
 } 
 
 export interface SubscribeFunction<T extends Action> { 
@@ -69,14 +72,6 @@ export type Action<T = any> =  {
 
 export type ActionType<T extends Action> = T["type"]
 
-export interface RxStoreOperator<
-    T,
-    V = ( args: { store: Record<string, any>, action: Action, dispatch: ( a: Action ) => any  } ) => any 
-> {
-    key: T
-    callback: V
-}
-
 export interface RxStoreMiddleware<
     S extends Record<string, any> = Record<string, any>,
     T extends Action = Action,
@@ -87,17 +82,20 @@ export interface RxStoreMiddleware<
 export type RxReducer<T, U> = ( state: T | undefined, action: U ) => T
 
 export interface ObserveListener<
-    T extends string, 
-    U extends ( ...args: any ) => any
+    S extends Record<string, any>,
+    T extends Action,
 > {
-    type: T,
-    observerFunction: U
+    type: ActionType<T> | Array<ActionType<T>> | "*",
+    observerFunction: ObserverFunction<S, T> 
 }
 
-export interface RxObserver<T extends Action> {
+export interface RxObserver<
+    S extends Record<string, any>,
+    T extends Action
+> {
     ( 
-        a: Array<ObserveListener<ActionType<T>, ObserverFunction<T>>>,
-        b: BehaviorSubject<Array<ObserveListener<ActionType<T>, ObserverFunction<T>>>>
+        a: Array<ObserveListener<S, T>>,
+        b: BehaviorSubject<Array<ObserveListener<S, T>>>
     ): void
 }
 
