@@ -33,9 +33,9 @@ import { Action, RxReducer, RxReducersMapObject } from '../types'
  * @return {RxReducer<S, T>} generated single reducer.
  */
 const combineReducers = <
-    S = any,
-    T extends Action = any,
->( reducers: RxReducersMapObject<S, T> ): RxReducer<S, T> => {
+    S extends Record<string, any>,
+    T extends Action
+>( reducers: RxReducersMapObject<S, any> ): RxReducer<S, T> => {
     const reducerKeys = Object.keys( reducers ) as Array<keyof RxReducersMapObject<S, T>>
 
     return ( state: S | undefined = {} as S, action: T ): S => {

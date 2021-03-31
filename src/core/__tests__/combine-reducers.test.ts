@@ -6,12 +6,17 @@ describe( 'combineReducers', () => {
         type IState1 = boolean
         type IState2 =  boolean
 
-        interface Action {
-            type: "ACTION_1" | "ACTION_2"
+        interface Action1 {
+            type: "ACTION_1"
             payload: boolean
         }
 
-        const reducer1 = ( state: IState1 = false, action: Action ) => {
+        interface Action2 {
+            type: "ACTION_2"
+            payload: boolean
+        }
+
+        const reducer1 = ( state: IState1 = false, action: Action1 ) => {
             switch ( action.type ) {
             case "ACTION_1":
                 return action.payload
@@ -20,7 +25,7 @@ describe( 'combineReducers', () => {
             }
         }
 
-        const reducer2 = ( state: IState2 = false, action: Action ) => {
+        const reducer2 = ( state: IState2 = false, action: Action2 ) => {
             switch ( action.type ) {
             case "ACTION_2":
                 return action.payload
@@ -28,7 +33,8 @@ describe( 'combineReducers', () => {
                 return state
             }
         }
-        const combinedReducer = combineReducers( {
+
+        const combinedReducer = combineReducers<{ action1: IState1, action2: IState2 }, Action1 | Action2>( {
             action1: reducer1,
             action2: reducer2,
         } )

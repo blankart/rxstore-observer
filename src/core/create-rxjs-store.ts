@@ -87,6 +87,13 @@ const createRxStore = <
                 
                 const subscription = observable.subscribe( {
                     next: newAction => {
+                        /**
+                         * If provided next action is null or undefined,
+                         * don't dispatch anything.
+                         */
+                        if ( newAction === null || newAction === undefined ) {
+                            return
+                        }
                         dispatch( newAction )
                     }
                 } )
@@ -95,8 +102,8 @@ const createRxStore = <
         },
     } )
 
-    const subscribe = ( subscribeFunction: SubscribeFunction<S> ): () => void => {
-        const subscription = state.subscribe( { next: subscribeFunction } )
+    const subscribe = ( subscribeFunction: SubscribeFunction<T> ): () => void => {
+        const subscription = action.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
         return () => {
             subscription.unsubscribe()
         }
@@ -110,6 +117,14 @@ const createRxStore = <
 
     const dispatch = ( newAction: T ) => {
         const next = ( val: T ): any => action.next( val ) 
+        /**
+         * If provided next action is null or undefined,
+         * don't dispatch anything.
+         */
+        if ( newAction === null || newAction === undefined ) {
+            return
+        }
+
         appliedMiddleware ? appliedMiddleware( 
             ( { getState, subscribe, dispatch, addWatcher } ) as RxStore<S, T> 
         )( next )( newAction ) : next( newAction )

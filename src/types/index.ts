@@ -14,11 +14,11 @@ export interface RxStore<
      * inside the store. It returns a function which can be called
      * again to unsubscribe to the changes. 
      * 
-     * @param {SubscribeFunction<StoreState>} subscribeFunction 
+     * @param {SubscribeFunction<V>} subscribeFunction 
      * 
      * @return {() => void} unsubscribe function
      */
-    subscribe: ( subscribeFunction: SubscribeFunction<S> ) => any
+    subscribe: ( subscribeFunction: SubscribeFunction<V> ) => any
     /**
      * Dispatch function accepts an action object which will be
      * dispatched to the reducer.
@@ -33,10 +33,10 @@ export interface RxStore<
      * import { mapTo } from 'rxjs/operators'
      * store.addWatcher( 'DO_SOMETHING', pipe => pipe( mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
-     * @param {V["type"]} type action type to subscribe to.
+     * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} watchFunction callback function.
      */
-    addWatcher: ( type: V[ "type" ], watchFunction: WatchFunction<V> ) => any
+    addWatcher: ( type: ActionType<V>, watchFunction: WatchFunction<V> ) => any
     /**
      * Used to include all watchers at once instead of calling 
      * `addWatcher` repeatedly. Added watchers must be of type `RxWatcher<Action>`.
@@ -58,8 +58,8 @@ export interface WatchFunction<T = any> {
     ( pipe: ( ...args: Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ) => Array<OperatorFunction<T, any> | RxStoreOperator<any, any>> ): void
 } 
 
-export interface SubscribeFunction<T = Record<string, any>> { 
-    ( store: T ): any 
+export interface SubscribeFunction<T extends Action> { 
+    ( action: T ): any 
 }
 
 export type Action<T = any> =  {
@@ -111,8 +111,8 @@ export interface RxDispatch<
  * @see https://github.com/reduxjs/redux
  */
 export type RxReducersMapObject<
-    S = Record<string, any>, 
-    A extends Action = Action
+    S extends Record<string, any>, 
+    A extends Action 
 > = {
   [ K in keyof S ]: RxReducer<S[ K ], A>
 }
@@ -120,6 +120,6 @@ export type RxReducersMapObject<
 /**
  * @see https://github.com/reduxjs/redux
  */
-export type StateFromReducersMapObject<M> = M extends RxReducersMapObject
+export type StateFromReducersMapObject<M> = M extends RxReducersMapObject<Record<string, any>, Action>
   ? { [ P in keyof M ]: M[ P ] extends RxReducer<infer S, any> ? S : never }
   : never
