@@ -11,7 +11,7 @@ const createObserver = <
     S extends Record<string, any>,
     T extends Action
 >( 
-    type: ActionType<T>, 
+    type: ActionType<T> | "*" | Array<ActionType<T>>, 
     observerFunction: ObserverFunction<S,T> 
 ): RxObserver<S, T>  => {
     return ( observers, observersListener ) => {

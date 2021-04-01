@@ -79,18 +79,19 @@ const createRxStore = <
                 const $observable = newObserver.observerFunction(
                     $action.pipe( 
                         filter( passedAction => { 
-                            if ( newObserver.type === '*' ) {
-                                return true
-                            }
-
                             if ( Array.isArray( newObserver.type ) ) {
                                 return newObserver.type.some( type => type === passedAction.type )
+                            }
+
+                            if ( newObserver.type === '*' ) {
+                                return true
                             }
 
                             return passedAction.type === newObserver.type 
                         }  )
                     ) as Observable<T>,
-                    getState
+                    getState,
+                    dispatch
                 )
                 
                 const subscription = $observable.subscribe( {
@@ -117,7 +118,7 @@ const createRxStore = <
         }
     }
 
-    const addObserver = ( type: ActionType<T>, observerFunction: ObserverFunction<S,T> ) => createObserver<S,T>( type, observerFunction )( observers, observersListener )
+    const addObserver = ( type: ActionType<T> | "*" | Array<ActionType<T>>, observerFunction: ObserverFunction<S,T> ) => createObserver<S,T>( type, observerFunction )( observers, observersListener )
 
     const addObservers = ( newObservers: Array<RxObserver<S,T>> ) => {
         newObservers.forEach( observer => observer( observers, observersListener ) )
