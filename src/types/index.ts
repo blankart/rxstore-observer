@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 
 export interface RxStoreCreator<
     S extends Record<string, any>,
@@ -49,8 +49,9 @@ export interface RxStore<
      * ```
      * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
+     * 
      */
-    addObserver: ( type: ActionType<T> | "*" | Array<ActionType<T>>, observerFunction: ObserverFunction<S, T> ) => any
+    addObserver: ( type: ObserverActionType<T>, observerFunction: ObserverFunction<S, T> ) => void
     /**
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
@@ -65,14 +66,14 @@ export interface RxStore<
      * ])
      * ```
      */
-    addObservers: ( newObservers: Array<RxObserver<S, T>> ) => any
+    addObservers: ( newObservers: Array<RxObserverOrObserverClass<S, T>> ) => any
 }
 
 export interface ObserverFunction<
     S extends Record<string, any>,
     T extends Action,
 > {
-    ( $action: Observable<T | null | undefined>, getState: () => S, dispatch: RxDispatch<T> ): Observable<T | null | undefined>
+    ( $action: Observable<T>, getState?: ( () => S ) | undefined, dispatch?: RxDispatch<T> | undefined ): Observable<T>
 } 
 
 export interface SubscribeFunction<T extends Action> { 
@@ -86,6 +87,8 @@ export type Action<T = any> =  {
 
 export type ActionType<T extends Action> = T["type"]
 
+export type ObserverActionType<T extends Action> = ActionType<T> | Array<ActionType<T>> | "*" | undefined
+
 export interface RxStoreMiddleware<
     S extends Record<string, any> = Record<string, any>,
     T extends Action = Action,
@@ -95,23 +98,10 @@ export interface RxStoreMiddleware<
 
 export type RxReducer<T, U> = ( state: T | undefined, action: U ) => T
 
-export interface ObserveListener<
-    S extends Record<string, any>,
-    T extends Action,
-> {
-    type: ActionType<T> | Array<ActionType<T>> | "*",
-    observerFunction: ObserverFunction<S, T> 
-}
-
-export interface RxObserver<
+export type RxObserverOrObserverClass<
     S extends Record<string, any>,
     T extends Action
-> {
-    ( 
-        a: Array<ObserveListener<S, T>>,
-        b: BehaviorSubject<Array<ObserveListener<S, T>>>
-    ): void
-}
+> = ObserverFunction<S, T>  | any
 
 export interface RxDispatch<
     S extends Action

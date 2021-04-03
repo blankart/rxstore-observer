@@ -1,4 +1,6 @@
-import { Action, ActionType, RxObserver, ObserverFunction } from "../types"
+import { Action, ObserverFunction, ObserverActionType } from "../types"
+import { filter } from 'rxjs/operators'
+import { Observable } from 'rxjs'
 
 /**
  * Creates a new instance of observer which can be
@@ -11,12 +13,31 @@ const createObserver = <
     S extends Record<string, any>,
     T extends Action
 >( 
-    type: ActionType<T> | "*" | Array<ActionType<T>>, 
+    type: ObserverActionType<T>, 
     observerFunction: ObserverFunction<S,T> 
-): RxObserver<S, T>  => {
-    return ( observers, observersListener ) => {
-        observers.push( { type, observerFunction } )
-        observersListener.next( observers )
+): ObserverFunction<S, T>  => {
+    return ( $action, getState, dispatch ) => {
+        const $newActionObservableInstance = observerFunction(
+            $action.pipe( 
+                filter( passedAction => { 
+                    type = type || '*'
+                    if ( type === '*' ) {
+                        return true
+                    }
+
+                    if ( Array.isArray( type ) ) {
+                        return type.some( type => type === ( passedAction ).type )
+                    }
+
+
+                    return passedAction.type === type 
+                }  )
+            ) as Observable<T>,
+            getState,
+            dispatch
+        )
+
+        return $newActionObservableInstance as Observable<T>
     }
 }
 

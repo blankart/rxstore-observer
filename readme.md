@@ -132,7 +132,7 @@ const listenToMeObserver = createObserver( "LISTEN_TO_ME", $action => $action.pi
 ) 
 
 /** 
-You can also observe to all actions dispatched to the store.
+You can also observe all actions dispatched to the store.
 **/
 const listenToAllObserver = createObserver( "*", $action => $action.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
@@ -141,7 +141,74 @@ const listenToAllObserver = createObserver( "*", $action => $action.pipe(
 store.addObservers( [ listenToMeObserver, listenToAllObserver ] )
 ```
 
-Both approaches do the same. 
+Both approaches do the same. But calling `addObservers` can accept both `createObserver` instances or `Observer` decorated classes. 
+
+Typescript version:
+```typescript
+import { Observer } from 'rxstore-observer'
+import { mapTo } from 'rxjs/operators'
+import store from './store'
+import { Store, Action } from './types'
+import { Observable } from 'rxjs'
+/**
+ * To enable this feature, make sure to set `experimentalDecorators` to
+ * true inside your jsconfig or tsconfig file.
+ **/
+
+// Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
+class ListenObserver {
+    @Observer<Store, Action>( 'LISTEN_TO_ME' )
+    listenToMeHandler( $action: Observable<Action> ) {
+        return $action.pipe( 
+            mapTo( { type: "I_AM_LISTENING" } )
+        )
+    }
+}
+
+/** 
+You can also observe all actions dispatched to the store.
+**/
+class BroadcastObserver {
+    @Observer<Store, Action>( '*' )
+    allHandler( $action: Observable<T> ) {
+        return $action.pipe(
+            mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
+        )
+    }
+}
+
+store.addObservers( [ ListenObserver, BroadcastObserver ] )
+```
+
+Or we can combine both observer classes to a single class:
+```typescript
+import { Observer } from 'rxstore-observer'
+import { mapTo } from 'rxjs/operators'
+import store from './store'
+/**
+ * To enable this feature, make sure to set `experimentalDecorators` to
+ * true inside your jsconfig or tsconfig file.
+ **/
+
+// You can add multiple observers inside a single class.
+class Observers {
+    @Observer( 'LISTEN_TO_ME' )
+    listenToMeHandler( $action ) {
+        return $action.pipe( 
+            mapTo( { type: "I_AM_LISTENING" } )
+        )
+    }
+
+    @Observer( '*' )
+    allHandler( $action ) {
+        return $action.pipe(
+            mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
+        )
+    }
+}
+
+store.addObservers( [ Observers ] )
+```
 
 ### Don't do this:
 ```javascript
