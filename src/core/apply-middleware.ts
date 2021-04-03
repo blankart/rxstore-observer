@@ -1,5 +1,5 @@
-import { Action, RxStore, RxStoreMiddleware } from '../types'
-import shallowEqual from '../utils/shallow-equal'
+import { Action, RxDispatch, RxReducer, RxStore, RxStoreCreator, RxStoreEnhancer, RxStoreMiddleware } from '../types'
+import compose from './compose'
 
 /**
  * Utility function for composing a middleware function
@@ -11,37 +11,20 @@ import shallowEqual from '../utils/shallow-equal'
 const applyMiddleware = <
     S extends Record<string, any>,
     T extends Action
->( ...middlewares: Array<RxStoreMiddleware<any, any>> ): RxStoreMiddleware<S, T> => {
-    return ( ( store: RxStore<S, T> ) => ( next: ( action: T ) => any ) => ( action: T ): any => {
-        if ( middlewares.length === 0 ) {
-            throw new Error( 'Invalid `applyMiddleware` parameter. Supply at least 1 middleware function.' )
-        }
-
-        let count = 0
-        let currentAction: T | null = null
-
-        const stackNext = ( newAction: T ) => {
-            count ++
-
-            if ( currentAction === null ) {
-                currentAction = newAction
-            }
-
-            if ( ! shallowEqual( currentAction, newAction ) || JSON.stringify( currentAction ) !== JSON.stringify( newAction ) ) {
-                next( currentAction )
-                currentAction = newAction
-            }
-
-            if ( middlewares[ count ] ) {
-                middlewares[ count ]( store )( stackNext )( action )
-            } else {
-                count = 0
-                next( currentAction )
+>( ...middlewares: Array<RxStoreMiddleware<any, any>> ): RxStoreEnhancer<S, T> => {
+    return ( creator: RxStoreCreator<S, T> ): RxStoreCreator<S, T> => {
+        return ( reducer: RxReducer<S, T>, initialState: S | undefined ): RxStore<S, T> => {
+            const store = creator( reducer, initialState )
+            let dispatch: RxDispatch<any> = () => { throw new Error( `Dispatch function is still being constructed inside the enhancer function.` ) }
+            const middlewareMap = middlewares.map( middleware => middleware( { getState: store.getState, dispatch: ( action, ...args ) => dispatch( action, ...args ) } as RxStore<S, T> ) )
+            dispatch = compose<typeof dispatch>( ...middlewareMap as [ typeof dispatch ] )( store.dispatch )
+            
+            return {
+                ...store,
+                dispatch
             }
         }
-
-        middlewares[ count ]( store )( stackNext )( action )
-    } ) as RxStoreMiddleware<S, T>
+    }
 }
 
 export default applyMiddleware

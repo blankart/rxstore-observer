@@ -1,8 +1,22 @@
 import { BehaviorSubject, Observable } from 'rxjs'
 
+export interface RxStoreCreator<
+    S extends Record<string, any>,
+    T extends Action,
+> {
+    (r: RxReducer<S, T>, s: S | undefined, e?: RxStoreEnhancer<S, T> ): RxStore<S, T>
+}
+
+export interface RxStoreEnhancer<
+    S extends Record<string, any>,
+    T extends Action,
+> {
+    (c: RxStoreCreator<S, T> ): RxStoreCreator<S, T>
+}
+
 export interface RxStore<
     S extends Record<string, any>,
-    V extends Action,
+    T extends Action,
 > {
     /**
      * Gets the current state value.
@@ -18,14 +32,14 @@ export interface RxStore<
      * 
      * @return {() => void} unsubscribe function
      */
-    subscribe: ( subscribeFunction: SubscribeFunction<V> ) => any
+    subscribe: ( subscribeFunction: SubscribeFunction<T> ) => any
     /**
      * Dispatch function accepts an action object which will be
      * dispatched to the reducer.
      * 
      * @param {T} action object
      */
-    dispatch: ( action: V ) => any
+    dispatch: ( action: T ) => any
     /**
      * Observers are the sagas of Rxjs Store. It subscribes to a single action type
      * to do side-effects using pipe and Rxjs operators.
@@ -36,7 +50,7 @@ export interface RxStore<
      * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
      */
-    addObserver: ( type: ActionType<V> | "*" | Array<ActionType<V>>, observerFunction: ObserverFunction<S, V> ) => any
+    addObserver: ( type: ActionType<T> | "*" | Array<ActionType<T>>, observerFunction: ObserverFunction<S, T> ) => any
     /**
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
@@ -51,7 +65,7 @@ export interface RxStore<
      * ])
      * ```
      */
-    addObservers: ( newObservers: Array<RxObserver<S, V>> ) => any
+    addObservers: ( newObservers: Array<RxObserver<S, T>> ) => any
 }
 
 export interface ObserverFunction<

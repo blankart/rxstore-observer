@@ -5,11 +5,11 @@ import {
     ObserverFunction , 
     SubscribeFunction , 
     Action, 
-    RxStoreMiddleware, 
     RxReducer,  
     ObserveListener,
     ActionType,
-    RxObserver
+    RxObserver,
+    RxStoreEnhancer
 } from '../types'
 import { INIT, INITType } from '../constants/init'
 import createObserver from './create-observer'
@@ -28,11 +28,23 @@ const createRxStore = <
 >(
     rootReducer: RxReducer<S, T>,
     initialState?: S,
-    appliedMiddleware?: RxStoreMiddleware<S, T>
+    enhancer?: RxStoreEnhancer<S, T>
 ): RxStore<S, T> => {
     if ( typeof rootReducer !== 'function' ) {
         throw new Error( 'Invalid reducer parameter. Reducer must be of type `function`.' )
     }
+
+    if ( enhancer && typeof enhancer !== 'function' ) {
+        throw new Error( 'Invalid enhancer function. Enhancer must be of type `function`' )
+    }
+
+    /**
+     * Allow enhancers to overwrite the existing creator function.
+     */
+    if ( enhancer ) {
+        return enhancer( createRxStore )( rootReducer, initialState ) as RxStore<S, T>
+    }
+
     /**
      * If no initial state is passed, it is already
      * assumed that the initial state is passed as
@@ -134,9 +146,7 @@ const createRxStore = <
             return
         }
 
-        appliedMiddleware ? appliedMiddleware( 
-            ( { getState, subscribe, dispatch, addObserver } ) as RxStore<S, T> 
-        )( next )( newAction ) : next( newAction )
+        next( newAction )
     }
 
     return { getState, subscribe, dispatch, addObserver, addObservers } as RxStore<S, T>
