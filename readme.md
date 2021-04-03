@@ -33,7 +33,7 @@ store.addObservers( [ whenStartFetching ] )
 
 The `store` is a store instance using `createRxStore` function. It will automatically subscribe to any dispatched function of type `START_FETCHING` to run some side-effects to the store. It dispatches `IS_FETCHING` in the middle of the stream of actions which is dispatched immediately. As your application gets bigger, RxStore Observer promises to handle most of the work. 🎊
 
-When building your app, you dont’t need to think about your application side-effects again after writing it.
+When building your app, you don’t need to think about your application side-effects again after writing it.
 
 If you’re not familiar with [Redux](https://redux.js.org/) and [ReactiveX](http://reactivex.io/), it might be a little bit challenging at first. This is a powerful tool for code-splitting and predictability of your application state.
 
