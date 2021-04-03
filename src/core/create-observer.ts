@@ -1,6 +1,6 @@
-import { Action, ObserverFunction, ObserverActionType } from "../types"
-import { filter } from 'rxjs/operators'
-import { Observable } from 'rxjs'
+import { Action, ObserverFunction, ObserverActionType, RxDispatch } from "../types"
+import { Observable, Subscription } from 'rxjs'
+import observerCreator from "../internals/observer-creator"
 
 /**
  * Creates a new instance of observer which can be
@@ -15,30 +15,8 @@ const createObserver = <
 >( 
     type: ObserverActionType<T>, 
     observerFunction: ObserverFunction<S,T> 
-): ObserverFunction<S, T>  => {
-    return ( $action, getState, dispatch ) => {
-        const $newActionObservableInstance = observerFunction(
-            $action.pipe( 
-                filter( passedAction => { 
-                    type = type || '*'
-                    if ( type === '*' ) {
-                        return true
-                    }
-
-                    if ( Array.isArray( type ) ) {
-                        return type.some( type => type === ( passedAction ).type )
-                    }
-
-
-                    return passedAction.type === type 
-                }  )
-            ) as Observable<T>,
-            getState,
-            dispatch
-        )
-
-        return $newActionObservableInstance as Observable<T>
-    }
+) => {
+    return ( $action: Observable<T>, getState: () => S, dispatch: RxDispatch<T> ): Subscription => observerCreator( type, observerFunction, $action, getState, dispatch )
 }
 
 export default createObserver

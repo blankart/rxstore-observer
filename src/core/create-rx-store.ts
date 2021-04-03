@@ -1,4 +1,4 @@
-import { BehaviorSubject, merge, Observable, Subject } from 'rxjs'
+import { BehaviorSubject, Subject } from 'rxjs'
 import { 
     RxStore, 
     ObserverFunction , 
@@ -9,9 +9,9 @@ import {
     ObserverActionType,
     RxObserverOrObserverClass,
 } from '../types'
-import createObserver from './create-observer'
-import { __observerFactory, ObserverFactoryEntry } from './observer'
+import { __observerFactory } from '../internals/__observer-factory'
 import isClass from '../utils/is-class'
+import observerCreator from '../internals/observer-creator'
 
 /**
  * Function for creating an RxJS Store.
@@ -87,59 +87,45 @@ const createRxStore = <
     }
 
     const addObserver = ( type: ObserverActionType<T>, observerFunction: ObserverFunction<S,T> ) => { 
-        createObserver( type, observerFunction )( $action as BehaviorSubject<T>, getState, dispatch ).subscribe( {
-            next: newAction => {
-                /**
-                         * If provided next action is null or undefined,
-                         * don't dispatch anything.
-                         */
-                if ( newAction === null || newAction === undefined ) {
-                    return
-                }
-                dispatch( newAction )
-            }
-        } )
+        observerCreator<S, T>( type, observerFunction, $action, getState, dispatch )
     }
 
     const addObservers = ( newObservers: Array<RxObserverOrObserverClass<S,T>> ) => {
-        const newObserversMap: Array<Observable<T>> = []
         newObservers.forEach( observer => {
             if ( isClass( observer ) ) {
+                /**
+                 * All registered keys and methods from
+                 * decorated class methods will be enqueued
+                 * here.
+                 * 
+                 * It accesses the `__observerFactory` object and
+                 * scans all observer functions that matches the class name
+                 * passed inside the `addObservers`
+                 * 
+                 * The approach for registering an observer using decorators
+                 * is still subject to change, as it imposes some weaknesses
+                 * (e.g. users cannot reuse decorated classes as observers 
+                 * to other store instances since __observerFactory only takes
+                 * note of the class name. )
+                 */
                 const key = observer.name as unknown as keyof typeof __observerFactory 
-
                 if ( __observerFactory.observers[ key ] ) {
-
-                    ( __observerFactory.observers[ key ] as unknown as Array<ObserverFactoryEntry<S, T>> ).forEach( ( { type, observerFunction } ) => {
-                        newObserversMap.push(
-                            createObserver( type, observerFunction )( $action, getState, dispatch )
-                        )
+                    __observerFactory.observers[ key ].forEach( ( { type, observerFunction } ) => {
+                        observerCreator( type, observerFunction, $action, getState, dispatch )
                     } )
-                } else {
-                    throw new Error( `${ key } is not a valid observer class. Make sure to provide a class with decorated methods (@MakeObserver).` )
-                }
-                return
+                    return
+                } 
+
+                throw new Error( `${ key } is not a valid observer class. Make sure to provide a class with decorated methods (@MakeObserver).` )
             }
 
             if ( typeof observer === 'function' ) {
-                newObserversMap.push( observer( $action as BehaviorSubject<T>, getState, dispatch )  ) 
+                observer( $action as BehaviorSubject<T>, getState, dispatch ) 
                 return
             }
 
             if ( ! observer || typeof observer !== 'object' || ! observer.prototype.constructor ) {
                 throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observer }` )
-            }
-        } )
-
-        merge( ...newObserversMap ).subscribe( {
-            next: newAction => {
-                /**
-                         * If provided next action is null or undefined,
-                         * don't dispatch anything.
-                         */
-                if ( newAction === null || newAction === undefined ) {
-                    return
-                }
-                dispatch( newAction )
             }
         } )
     }
