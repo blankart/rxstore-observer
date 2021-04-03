@@ -31,7 +31,7 @@ const whenStartFetching = createObserver( 'START_FETCHING', ( $action, getState,
 store.addObservers( [ whenStartFetching ] )
 ```
 
-The `store` is a store instance using `createRxStore` function. It will automatically subscribe to any dispatched function of type `START_FETCHING` to run some side-effects to the store. It dispatches `IS_FETCHING` in the middle of the stream of actions which is dispatched immediately. As your application gets bigger, RxStore Observer promises to handle most of the work. 🎊
+The `store` is a store instance using `createRxStore` function. `whenStartFetching` will automatically subscribe to any dispatched function of type `START_FETCHING` to run some side-effects to the store. It dispatches `IS_FETCHING` in the middle of the stream of actions which is dispatched immediately. As your application gets bigger, RxStore Observer promises to handle most of the work. 🎊
 
 When building your app, you don’t need to think about your application side-effects again after writing it.
 
@@ -107,7 +107,7 @@ import { mapTo } from 'rxjs/operators'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
 store.addObserver( "LISTEN_TO_ME", $action => $action.pipe(
-		mapTo({ type: "I_AM_LISTENING" } )
+    mapTo({ type: "I_AM_LISTENING" } )
 ) )
 
 /** 
@@ -128,7 +128,7 @@ import store from './store'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
 const listenToMeObserver = createObserver( "LISTEN_TO_ME", $action => $action.pipe(
-	mapTo( { type: "I_AM_LISTENING" } )
+    mapTo( { type: "I_AM_LISTENING" } )
 ) 
 
 /** 
