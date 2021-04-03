@@ -67,24 +67,24 @@ To create a new store:
 import { createRxStore } from 'rxstore-observer'
 
 const initialState = {
-	counter: 0
+    counter: 0
 }
 
 const reducer = (state = initialState, action ) => {
-	switch (action.type) {
-		case 'INCREMENT': return { ...state, counter: state.counter + 1 }
-		case 'DECREMENT': return { ...state, counter: state.counter - 1 }
-		default: return state
-	}
+    switch (action.type) {
+        case 'INCREMENT': return { ...state, counter: state.counter + 1 }
+        case 'DECREMENT': return { ...state, counter: state.counter - 1 }
+        default: return state
+    }
 }
 
 // Create a mew store instance using `createRxStore`
 const store = createRxStore( reducer )
 
 store.subscribe( (action) => {
-		// Subscribing to any state changes inside your store continer.
-		console.log( 'ACTION DISPATCHED: ', action )
-		console.log( 'CURRENT STATE: ', store.getState() ) 
+    // Subscribing to any state changes inside your store continer.
+    console.log( 'ACTION DISPATCHED: ', action )
+    console.log( 'CURRENT STATE: ', store.getState() ) 
 } )
 
 // Used for dispatching an action to the store.
