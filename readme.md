@@ -128,7 +128,7 @@ import store from './store'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
 const listenToMeObserver = createObserver( "LISTEN_TO_ME", $action => $action.pipe(
-		mapTo( { type: "I_AM_LISTENING" } )
+	mapTo( { type: "I_AM_LISTENING" } )
 ) 
 
 /** 
@@ -159,6 +159,6 @@ store.addObserver( "AN_ACTION_TYPE", $action => $action )
 
 ---
 
-Since the project is currently in development, the existing APIs will most likely change. Before building an official documentation, it's important that this library is battle tested for production sites.
+Since the project is currently under development, the existing APIs will most likely change. Before building an official documentation, it's important that this library is battle tested for production sites.
 
 Documentations page will be constructed soon.
