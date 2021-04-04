@@ -1,7 +1,6 @@
 import createRxStore from '../create-rx-store'
 import { map } from 'rxjs/operators'
-import { Action, reducer, initialState, State } from '../../templates/mock-store'
-import createObserver from '../create-observer'
+import { Action, reducer, initialState } from '../../templates/mock-store'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
@@ -11,6 +10,40 @@ describe( 'createRxJsStore', () => {
         expect( dummyStore.addObserver ).toBeTruthy()
         expect( dummyStore.subscribe ).toBeTruthy()
         expect( dummyStore.dispatch ).toBeTruthy()
+    } )
+
+    test( 'Invalid reducer passed', () => {
+        const invalidReducers = [ null, undefined, 'string', 23, class {} ]
+        invalidReducers.forEach( invalidReducer => {
+            const tryMockFunction = jest.fn()
+            const catchMockFunction = jest.fn()
+            try {
+                createRxStore( invalidReducer as any )
+                tryMockFunction()
+            } catch ( e ) {
+                catchMockFunction()
+            }
+
+            expect( tryMockFunction ).not.toBeCalled()
+            expect( catchMockFunction ).toBeCalled()
+        } )
+    } )
+
+    test( 'Invalid enhancer passed', () => {
+        const invalidEnhancers = [ 'string', 23, class {} ]
+        invalidEnhancers.forEach( invalidEnhancer => {
+            const tryMockFunction = jest.fn()
+            const catchMockFunction = jest.fn()
+            try {
+                createRxStore( reducer, undefined, invalidEnhancer as any )
+                tryMockFunction()
+            } catch ( e ) {
+                catchMockFunction()
+            }
+
+            expect( tryMockFunction ).not.toBeCalled()
+            expect( catchMockFunction ).toBeCalled()
+        } )
     } )
 
     test( 'Store data manipulation', () => {
@@ -93,27 +126,5 @@ describe( 'createRxJsStore', () => {
         expect( mockFunction2 ).toBeCalledTimes( 18 )
         expect( count2 ).toBe( 18 )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Count 20' )
-    } )
-
-    test( 'Register createObserver instance inside addObservers', () => {
-        const dummyStore = createRxStore( reducer )
-
-        const dummyObserver1 = createObserver<State, Action>( 'CHANGE_DUMMY_FIELD_1', $action => $action.pipe(
-            map( action => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) )
-        ) )
-
-        const dummyObserver2 = createObserver<State, Action>( 'CHANGE_DUMMY_FIELD_2', $action => $action.pipe(
-            map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) )
-        ) )
-
-        dummyStore.addObservers( [
-            dummyObserver1,
-            dummyObserver2
-        ] )
-
-        dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )
-        expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
-        expect( dummyStore.getState().dummyField2 ).toBe( 'Changed value' )
-        expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value' )
     } )
 } )

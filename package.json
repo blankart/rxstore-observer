@@ -1,6 +1,6 @@
 {
   "name": "rxstore-observer",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "React state management tool using RxJS",
   "repository": "blankart/rxstore-observer",
   "main": "lib/rxstore-observer.js",
@@ -10,7 +10,6 @@
   "types": "types/index.d.ts",
   "files": [
     "dist",
-    "src",
     "es",
     "lib",
     "types"
@@ -50,7 +49,6 @@
     "@rollup/plugin-typescript": "^8.2.1",
     "@testing-library/react": "^11.2.5",
     "@types/jest": "^26.0.22",
-    "@types/redux-logger": "^3.0.8",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
     "eslint": "^7.23.0",
@@ -62,23 +60,14 @@
     "rollup-plugin-terser": "^7.0.2",
     "ts-jest": "^26.5.4",
     "ts-node": "^9.1.1",
-    "tsconfig-paths": "^3.9.0",
     "tslib": "^2.1.0"
   },
   "nodemonConfig": {
     "watch": [
       "src"
     ],
-    "exec": "node -r tsconfig-paths/register -r ts-node/register src/index.ts",
+    "exec": "node -r ts-node/register src/index.ts",
     "ext": "ts, js"
   },
-  "test": "jest",
-  "jest": {
-    "testPathIgnorePatterns": [
-      "<rootDir>/node_modules/"
-    ],
-    "transform": {
-      ".*": "babel-jest"
-    }
-  }
+  "test": "jest"
 }

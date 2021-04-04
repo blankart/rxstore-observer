@@ -141,7 +141,7 @@ const listenToAllObserver = createObserver( "*", $action => $action.pipe(
 store.addObservers( [ listenToMeObserver, listenToAllObserver ] )
 ```
 
-Both approaches do the same. But calling `addObservers` can accept both `createObserver` instances or `Observer` decorated classes. 
+Both approaches work the same. But calling `addObservers` can accept both `createObserver` instances and `Observer` decorated classes. 
 
 Typescript version:
 ```typescript

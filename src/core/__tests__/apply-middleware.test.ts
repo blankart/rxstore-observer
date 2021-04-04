@@ -67,4 +67,26 @@ describe( 'applyMiddleware', () => {
         expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value 3' )
         expect( mockFunction ).toBeCalledTimes( 3 )
     } )
+
+    test( 'Middleware errors', () => {
+        const mockMiddleware: RxStoreMiddleware = store => {
+            store.dispatch( { type: "DISPATCHED AN ACTION WHILE CREATING THE MIDDLEWARE" } )
+            return next => ( action: any ) => {
+                next( action )
+            }
+        }
+
+        const tryMockFunction = jest.fn()
+        const catchMockFunction = jest.fn()
+
+        try {
+            createRxStore( reducer, initialState, applyMiddleware<State, Action>( mockMiddleware ) )  
+            tryMockFunction()
+        } catch ( e ) {
+            catchMockFunction()
+        }
+
+        expect( tryMockFunction ).not.toBeCalled()
+        expect( catchMockFunction ).toBeCalled()
+    } )
 } )

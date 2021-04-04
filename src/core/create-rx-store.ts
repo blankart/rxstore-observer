@@ -1,8 +1,8 @@
 import { BehaviorSubject, Subject } from 'rxjs'
 import { 
     RxStore, 
-    ObserverFunction , 
-    SubscribeFunction , 
+    ObserverFunction, 
+    SubscribeFunction, 
     Action, 
     RxReducer,  
     RxStoreEnhancer,
@@ -29,11 +29,11 @@ const createRxStore = <
     initialState?: S,
     enhancer?: RxStoreEnhancer<S, T>
 ): RxStore<S, T> => {
-    if ( typeof rootReducer !== 'function' ) {
+    if ( typeof rootReducer !== 'function' || isClass( rootReducer ) ) {
         throw new Error( 'Invalid reducer parameter. Reducer must be of type `function`.' )
     }
 
-    if ( enhancer && typeof enhancer !== 'function' ) {
+    if ( enhancer && ( typeof enhancer !== 'function' || isClass( rootReducer ) ) ) {
         throw new Error( 'Invalid enhancer function. Enhancer must be of type `function`' )
     }
 
@@ -87,7 +87,11 @@ const createRxStore = <
     }
 
     const addObserver = ( type: ObserverActionType<T>, observerFunction: ObserverFunction<S,T> ) => { 
-        observerCreator<S, T>( type, observerFunction, $action, getState, dispatch )
+        if ( typeof observerFunction === 'function' && ! isClass( observerFunction ) ) {
+            observerCreator<S, T>( type, observerFunction, $action, getState, dispatch )
+            return
+        }
+        throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observerFunction }` )
     }
 
     const addObservers = ( newObservers: Array<RxObserverOrObserverClass<S,T>> ) => {
@@ -113,6 +117,7 @@ const createRxStore = <
                     __observerFactory.observers[ key ].forEach( ( { type, observerFunction } ) => {
                         observerCreator( type, observerFunction, $action, getState, dispatch )
                     } )
+                    __observerFactory.observers[ key ] = []
                     return
                 } 
 

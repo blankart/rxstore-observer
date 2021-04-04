@@ -41,9 +41,10 @@ describe( 'combineReducers', () => {
 
         const dummyStore = createRxStore( combinedReducer )
 
-        expect( dummyStore.getState().action1 ).toBeFalsy()
-        expect( dummyStore.getState().action2 ).toBeFalsy()
-
+        expect( dummyStore.getState() ).toEqual( {
+            action1: false,
+            action2: false,
+        } )
         dummyStore.dispatch( { type: "ACTION_1", payload: true } )
         dummyStore.dispatch( { type: "ACTION_2", payload: true } )
 
