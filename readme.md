@@ -1,10 +1,10 @@
 ![https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observable%20Banner.jpg?alt=media&token=84e14c8f-9a16-4bf8-8ebb-2d020a317746](https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observable%20Banner.jpg?alt=media&token=84e14c8f-9a16-4bf8-8ebb-2d020a317746)
 
-RxStore Observable is a powerful redux-inspired state management library using [ReactiveX](http://reactivex.io/) as its core. This provides a complete tool for scalable javascript applications by offering built-in side-effects handling using *Observables.*
+RxStore Observer is a powerful redux-inspired state management library using [ReactiveX](http://reactivex.io/) as its core. This provides a complete tool for scalable javascript applications by offering built-in side-effects handling using *Observables.*
 
 ## Usage
 
-> Why should i switch to *RxStore Observable?*
+> Why should i switch to *RxStore Observer?*
 
 ```jsx
 import { createObserver } from 'rxstore-observer'
