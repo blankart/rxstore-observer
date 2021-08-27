@@ -7,14 +7,16 @@ RxStore Observer is a powerful redux-inspired state management library using [Re
 > Why should i switch to *RxStore Observer?*
 
 ```jsx
-import { createObserver } from 'rxstore-observer'
+import { createObserver, ofType } from 'rxstore-observer'
 import Api from './api'
 import { mergeMap, map, tap, debounceTime } from 'rxjs/operators'
 import { from } from 'rxstore'
 import store from './store'
 
-const whenStartFetching = createObserver( 'START_FETCHING', ( $action, getState, dispatch ) => {
+const whenStartFetching = createObserver( ( $action, getState, dispatch ) => {
    return $action.pipe(
+       // Only allow 'START_FETCHING' to enter the stream.
+       ofType( 'START_FETCHING' ),
        // debounces the action pipe to avoid multiple server fetching.
        debounceTime( 1000 ),
        // dispatches an action which fires a loading indicator.
