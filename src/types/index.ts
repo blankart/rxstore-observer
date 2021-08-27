@@ -51,7 +51,7 @@ export interface RxStore<
      * @param {W} observerFunction callback function.
      * 
      */
-    addObserver: ( type: ObserverActionType<T>, observerFunction: ObserverFunction<S, T> ) => void
+    addObserver: <V extends Action>( observerFunction: ObserverFunction<S, T, V> ) => void
     /**
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
@@ -72,8 +72,9 @@ export interface RxStore<
 export interface ObserverFunction<
     S extends Record<string, any>,
     T extends Action,
+    V extends Action = T,
 > {
-    ( $action: Observable<T>, getState?: ( () => S ) | undefined, dispatch?: RxDispatch<T> | undefined ): Observable<T>
+    ( $action: Observable<V>, getState: ( () => S ), dispatch: RxDispatch<T> ): Observable<V>
 } 
 
 export interface SubscribeFunction<T extends Action> { 
@@ -86,8 +87,6 @@ export type Action<T = any> =  {
 }
 
 export type ActionType<T extends Action> = T["type"]
-
-export type ObserverActionType<T extends Action> = ActionType<T> | Array<ActionType<T>> | "*" | undefined
 
 export interface RxStoreMiddleware<
     S extends Record<string, any> = Record<string, any>,

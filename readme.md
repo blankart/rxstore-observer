@@ -104,16 +104,18 @@ To create an observer:
 ```jsx
 import store from './store'
 import { mapTo } from 'rxjs/operators'
+import { ofType } from 'rxstore-observer'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-store.addObserver( "LISTEN_TO_ME", $action => $action.pipe(
+store.addObserver( $action => $action.pipe(
+    ofType( "LISTEN_TO_ME" ),
     mapTo({ type: "I_AM_LISTENING" } )
 ) )
 
 /** 
 You can also observe to all actions dispatched to the store.
 **/
-store.addObserver( "*", $action => $action.pipe(
+store.addObserver( $action => $action.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
 ) ) 
 
@@ -122,19 +124,20 @@ store.addObserver( "*", $action => $action.pipe(
 Alternatively, you can create multiple instances of `observers` then pass it inside the `addObservers` function.
 
 ```jsx
-import { createObserver } from 'rxstore-observer'
+import { createObserver, ofType } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 import store from './store'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-const listenToMeObserver = createObserver( "LISTEN_TO_ME", $action => $action.pipe(
+const listenToMeObserver = createObserver( $action => $action.pipe(
+    ofType( "LISTEN_TO_ME" ),
     mapTo( { type: "I_AM_LISTENING" } )
 ) 
 
 /** 
 You can also observe all actions dispatched to the store.
 **/
-const listenToAllObserver = createObserver( "*", $action => $action.pipe(
+const listenToAllObserver = createObserver( $action => $action.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
 ) ) 
 
@@ -145,7 +148,7 @@ Both approaches work the same. But calling `addObservers` can accept both `creat
 
 Typescript version:
 ```typescript
-import { Observer } from 'rxstore-observer'
+import { Observer, ofType } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 import store from './store'
 import { Store, Action } from './types'
@@ -157,9 +160,10 @@ import { Observable } from 'rxjs'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
 class ListenObserver {
-    @Observer<Store, Action>( 'LISTEN_TO_ME' )
+    @Observer<Store, Action>()
     listenToMeHandler( $action: Observable<Action> ) {
         return $action.pipe( 
+            ofType( "LISTEN_TO_ME" ),
             mapTo( { type: "I_AM_LISTENING" } )
         )
     }
@@ -169,7 +173,7 @@ class ListenObserver {
 You can also observe all actions dispatched to the store.
 **/
 class BroadcastObserver {
-    @Observer<Store, Action>( '*' )
+    @Observer<Store, Action>()
     allHandler( $action: Observable<T> ) {
         return $action.pipe(
             mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
@@ -182,7 +186,7 @@ store.addObservers( [ ListenObserver, BroadcastObserver ] )
 
 Or we can combine both observer classes to a single class:
 ```typescript
-import { Observer } from 'rxstore-observer'
+import { Observer, ofType } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 import store from './store'
 /**
@@ -192,14 +196,15 @@ import store from './store'
 
 // You can add multiple observers inside a single class.
 class Observers {
-    @Observer( 'LISTEN_TO_ME' )
+    @Observer()
     listenToMeHandler( $action ) {
         return $action.pipe( 
+            ofType( "LISTEN_TO_ME" ),
             mapTo( { type: "I_AM_LISTENING" } )
         )
     }
 
-    @Observer( '*' )
+    @Observer()
     allHandler( $action ) {
         return $action.pipe(
             mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
@@ -218,7 +223,7 @@ store.addObservers( [ Observers ] )
  * observable stream, it will dispatch the same action
  * piped to it. 
  * */
-store.addObserver( "AN_ACTION_TYPE", $action => $action )
+store.addObserver( $action => $action )
 ```
 
 

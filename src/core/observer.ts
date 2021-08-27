@@ -1,4 +1,4 @@
-import { Action, ObserverActionType, ObserverFunction } from "../types"
+import { Action, ObserverFunction } from "../types"
 import { __observerFactory } from '../internals/__observer-factory'
 
 /**
@@ -12,7 +12,7 @@ import { __observerFactory } from '../internals/__observer-factory'
  * import { Observable } from 'rxjs'
  *
  * class ListenObserver {
- *      Observer( 'LISTEN_TO_ME' )
+ *      Observer()
  *      listenToMeHandler( $action: Observable<T> )  {
  *          return $action.pipe(
  *              mapTo( { type: "I_AM_LISTENING" } )
@@ -21,7 +21,7 @@ import { __observerFactory } from '../internals/__observer-factory'
  * }
  * 
  * class BroadcastObserver {
- *      Observer( '*' )
+ *      Observer()
  *      allHandler( $action: Observable<T> )  {
  *          return $action.pipe(
  *              mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
@@ -34,23 +34,24 @@ import { __observerFactory } from '../internals/__observer-factory'
  */
 const Observer = <
     S extends Record<string, any>, 
-    T extends Action
->( type?: ObserverActionType<T> ) => ( 
+    T extends Action,
+    U extends Action = T,
+    V extends Action = Extract<T, U>
+> () => ( 
     target: any, 
     name: string, 
-    descriptor: TypedPropertyDescriptor<ObserverFunction<S, T>> 
+    descriptor: TypedPropertyDescriptor<any> 
 ) => {
     if ( typeof descriptor.value !== 'function' ) {
         throw new Error( 'Invalid decoration call. `MakeObservable` only decorates class methods.' )
     }
 
-    type = type || '*'
-
     if ( ! __observerFactory.observers[ target.constructor.name ] ) {
         __observerFactory.observers[ target.constructor.name ] = []
     }
 
-    __observerFactory.observers[ target.constructor.name ].push( { type, observerFunction: descriptor.value.bind( {} ) } as unknown as { type: ObserverActionType<T>, observerFunction: ObserverFunction<S, T>} )
+    __observerFactory.observers[ target.constructor.name ]
+        .push( descriptor.value.bind( {} ) as ObserverFunction<S, T, V> )
 
     return descriptor
 }

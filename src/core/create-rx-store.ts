@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject } from 'rxjs'
+import { BehaviorSubject, Observable, Subject } from 'rxjs'
 import { 
     RxStore, 
     ObserverFunction, 
@@ -6,7 +6,6 @@ import {
     Action, 
     RxReducer,  
     RxStoreEnhancer,
-    ObserverActionType,
     RxObserverOrObserverClass,
 } from '../types'
 import { __observerFactory } from '../internals/__observer-factory'
@@ -86,9 +85,17 @@ const createRxStore = <
         }
     }
 
-    const addObserver = ( type: ObserverActionType<T>, observerFunction: ObserverFunction<S,T> ) => { 
+    const addObserver = <
+        U extends Action, 
+        V extends Action = Extract<T, U>
+    >( observerFunction: ObserverFunction<S, T, V> ) => { 
         if ( typeof observerFunction === 'function' && ! isClass( observerFunction ) ) {
-            observerCreator<S, T>( type, observerFunction, $action, getState, dispatch )
+            observerCreator( 
+                observerFunction, 
+                ( $action as unknown as Observable<V> ), 
+                getState, 
+                dispatch 
+            )
             return
         }
         throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observerFunction }` )
@@ -114,8 +121,8 @@ const createRxStore = <
                  */
                 const key = observer.name as unknown as keyof typeof __observerFactory 
                 if ( __observerFactory.observers[ key ] ) {
-                    __observerFactory.observers[ key ].forEach( ( { type, observerFunction } ) => {
-                        observerCreator( type, observerFunction, $action, getState, dispatch )
+                    __observerFactory.observers[ key ].forEach( observerFunction => {
+                        observerCreator( observerFunction, $action, getState, dispatch )
                     } )
                     __observerFactory.observers[ key ] = []
                     return
@@ -137,18 +144,10 @@ const createRxStore = <
 
     const dispatch = ( newAction: T ) => {
         const next = ( val: T ): any => $action.next( val ) 
-        /**
-         * If provided next action is null or undefined,
-         * don't dispatch anything.
-         */
-        if ( newAction === null || newAction === undefined ) {
-            return
-        }
-
         next( newAction )
     }
 
-    return { getState, subscribe, dispatch, addObserver, addObservers } as RxStore<S, T>
+    return { getState, subscribe, dispatch, addObserver, addObservers }
 }
 
 export default createRxStore

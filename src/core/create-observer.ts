@@ -1,4 +1,4 @@
-import { Action, ObserverFunction, ObserverActionType, RxDispatch } from "../types"
+import { Action, ObserverFunction, RxDispatch } from "../types"
 import { Observable, Subscription } from 'rxjs'
 import observerCreator from "../internals/observer-creator"
 
@@ -28,12 +28,13 @@ import observerCreator from "../internals/observer-creator"
  */
 const createObserver = <
     S extends Record<string, any>,
-    T extends Action
+    T extends Action,
+    U extends Action = T,
+    V extends Action = Extract<T, U>
 >( 
-    type: ObserverActionType<T>, 
-    observerFunction: ObserverFunction<S,T> 
+    observerFunction: ObserverFunction<S,T,V> 
 ) => {
-    return ( $action: Observable<T>, getState: () => S, dispatch: RxDispatch<T> ): Subscription => observerCreator( type, observerFunction, $action, getState, dispatch )
+    return ( $action: Observable<V>, getState: () => S, dispatch: RxDispatch<T> ): Subscription => observerCreator( observerFunction, $action, getState, dispatch )
 }
 
 export default createObserver

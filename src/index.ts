@@ -1,4 +1,4 @@
-export { createRxStore, applyMiddleware, createObserver, combineReducers, compose, Observer } from './core'
+export { createRxStore, applyMiddleware, createObserver, combineReducers, compose, Observer, ofType } from './core'
 export { 
     RxStoreCreator,
     RxStoreEnhancer,
@@ -7,7 +7,6 @@ export {
     SubscribeFunction,
     Action,
     ActionType,
-    ObserverActionType,
     RxStoreMiddleware,
     RxReducer,
     RxObserverOrObserverClass,

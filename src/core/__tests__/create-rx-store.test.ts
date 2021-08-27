@@ -1,6 +1,7 @@
 import createRxStore from '../create-rx-store'
+import ofType from '../of-type'
 import { map } from 'rxjs/operators'
-import { Action, reducer, initialState } from '../../templates/mock-store'
+import { Action, reducer, initialState, ChangeDummyField3Action, ChangeDummyField2Action } from '../../templates/mock-store'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
@@ -65,12 +66,14 @@ describe( 'createRxJsStore', () => {
 
     test( 'Store observers', () => {
         const dummyStore = createRxStore( reducer )
-        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', $action => $action.pipe(
+        dummyStore.addObserver<ChangeDummyField2Action>( $action => $action.pipe(
+            ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( value => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( value as Action ).payload } ) )
         ) )
 
-        dummyStore.addObserver( 'CHANGE_DUMMY_FIELD_1', $action => { 
+        dummyStore.addObserver<ChangeDummyField3Action>( $action => { 
             return $action.pipe(
+                ofType( 'CHANGE_DUMMY_FIELD_1' ),
                 map( action => { 
                     return { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload }  
                 } )
