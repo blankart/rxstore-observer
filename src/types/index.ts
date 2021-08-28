@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs'
+import { BehaviorSubject, Observable, Subject } from 'rxjs'
 
 export interface RxStoreCreator<
     S extends Record<string, any>,
@@ -45,7 +45,8 @@ export interface RxStore<
      * to do side-effects using pipe and Rxjs operators.
      * ```
      * import { mapTo } from 'rxjs/operators'
-     * store.addObserver( 'DO_SOMETHING', $store => $store.pipe( mapTo({ type: 'THEN_DO_THIS' }) ) );
+     * import { ofType } from 'rxstore-observer'
+     * store.addObserver( $store => $store.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
      * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
@@ -56,9 +57,9 @@ export interface RxStore<
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
      * ```
-     * import { createObserver } from 'rxstore-watch'
-     * const doSomethingObserver = createObserver( 'DO_SOMETHING', $store => $store.pipe( mapTo({ type: 'THEN_DO_THIS' })));
-     * const doStuffObserver = createObserver( 'DO_STUFF', $store => $store.pipe( mapTo({ type: 'THEN_DO_THAT' })));
+     * import { createObserver, ofType } from 'rxstore-observer'
+     * const doSomethingObserver = createObserver( $store => $store.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' })));
+     * const doStuffObserver = createObserver( $store => $store.pipe( ofType('DO_STUFF'), mapTo({ type: 'THEN_DO_THAT' })));
      * 
      * store.addObservers([
      * doSomethingObserver,
@@ -74,7 +75,7 @@ export interface ObserverFunction<
     T extends Action,
     V extends Action = T,
 > {
-    ( $action: Observable<V>, getState: ( () => S ), dispatch: RxDispatch<T> ): Observable<V>
+    ( action$: Subject<T>, state$: BehaviorSubject<S> ): Observable<V>
 } 
 
 export interface SubscribeFunction<T extends Action> { 
@@ -99,8 +100,9 @@ export type RxReducer<T, U> = ( state: T | undefined, action: U ) => T
 
 export type RxObserverOrObserverClass<
     S extends Record<string, any>,
-    T extends Action
-> = ObserverFunction<S, T>  | any
+    T extends Action,
+    U extends Action = T,
+> = ObserverFunction<S, T, U>  | any
 
 export interface RxDispatch<
     S extends Action

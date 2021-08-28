@@ -13,8 +13,8 @@ import { __observerFactory } from '../internals/__observer-factory'
  *
  * class ListenObserver {
  *      Observer()
- *      listenToMeHandler( $action: Observable<T> )  {
- *          return $action.pipe(
+ *      listenToMeHandler( action$: Observable<T> )  {
+ *          return action$.pipe(
  *              mapTo( { type: "I_AM_LISTENING" } )
  *          )
  *      }
@@ -22,8 +22,8 @@ import { __observerFactory } from '../internals/__observer-factory'
  * 
  * class BroadcastObserver {
  *      Observer()
- *      allHandler( $action: Observable<T> )  {
- *          return $action.pipe(
+ *      allHandler( action$: Observable<T> )  {
+ *          return action$.pipe(
  *              mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
  *          )
  *      }

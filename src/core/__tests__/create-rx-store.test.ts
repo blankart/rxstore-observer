@@ -66,13 +66,13 @@ describe( 'createRxJsStore', () => {
 
     test( 'Store observers', () => {
         const dummyStore = createRxStore( reducer )
-        dummyStore.addObserver<ChangeDummyField2Action>( $action => $action.pipe(
+        dummyStore.addObserver<ChangeDummyField2Action>( action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( value => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( value as Action ).payload } ) )
         ) )
 
-        dummyStore.addObserver<ChangeDummyField3Action>( $action => { 
-            return $action.pipe(
+        dummyStore.addObserver<ChangeDummyField3Action>( action$ => { 
+            return action$.pipe(
                 ofType( 'CHANGE_DUMMY_FIELD_1' ),
                 map( action => { 
                     return { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload }  

@@ -13,18 +13,18 @@ import { mergeMap, map, tap, debounceTime } from 'rxjs/operators'
 import { from } from 'rxstore'
 import store from './store'
 
-const whenStartFetching = createObserver( ( $action, getState, dispatch ) => {
-   return $action.pipe(
+const whenStartFetching = createObserver( ( action$, state$ ) => {
+   return action$.pipe(
        // Only allow 'START_FETCHING' to enter the stream.
        ofType( 'START_FETCHING' ),
        // debounces the action pipe to avoid multiple server fetching.
        debounceTime( 1000 ),
        // dispatches an action which fires a loading indicator.
-       tap( () => dispatch( { type: 'IS_FETCHING', payload: true } ) ),
+       tap( () => action$.next( { type: 'IS_FETCHING', payload: true } ) ),
        // gets the result from an external asynchronous function.
        mergeMap( action => from( Api.fetch( action.payload ) ),
        // sets the loading state to false.
-       tap( () => dispatch( { type: 'IS_FETCHING', payload: false } ),
+       tap( () => action$.next( { type: 'IS_FETCHING', payload: false } ),
        // end of the action stream. dispatches the result.
        map( result => ( { type: 'END_FETCHING', result } ) )
    )
@@ -45,7 +45,7 @@ If you’re not familiar with [Redux](https://redux.js.org/) and [ReactiveX](htt
 
 ![https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9](https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9)
 
-Since *action objects* act like a stream of objects used for redefining the next shape of the store, it would make more sense to convert it to an observable. Defining more observers using `addObserver` or `addObservers` creates a new observable instance subscribed to the original action streams. By looking at the example above, the `createObserver` function passes an `$action` , which is the original action stream of your store. It then returns a new `$action` observable instance which can be used for subscribing to the current action dispatched. 
+Since *action objects* act like a stream of objects used for redefining the next shape of the store, it would make more sense to convert it to an observable. Defining more observers using `addObserver` or `addObservers` creates a new observable instance subscribed to the original action streams. By looking at the example above, the `createObserver` function passes an `action$` , which is the original action stream of your store. It then returns a new `action$` observable instance which can be used for subscribing to the current action dispatched. 
 
 ## Getting Started
 
@@ -109,7 +109,7 @@ import { mapTo } from 'rxjs/operators'
 import { ofType } from 'rxstore-observer'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-store.addObserver( $action => $action.pipe(
+store.addObserver( action$ => action$.pipe(
     ofType( "LISTEN_TO_ME" ),
     mapTo({ type: "I_AM_LISTENING" } )
 ) )
@@ -117,7 +117,7 @@ store.addObserver( $action => $action.pipe(
 /** 
 You can also observe to all actions dispatched to the store.
 **/
-store.addObserver( $action => $action.pipe(
+store.addObserver( action$ => action$.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
 ) ) 
 
@@ -131,7 +131,7 @@ import { mapTo } from 'rxjs/operators'
 import store from './store'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-const listenToMeObserver = createObserver( $action => $action.pipe(
+const listenToMeObserver = createObserver( action$ => action$.pipe(
     ofType( "LISTEN_TO_ME" ),
     mapTo( { type: "I_AM_LISTENING" } )
 ) 
@@ -139,7 +139,7 @@ const listenToMeObserver = createObserver( $action => $action.pipe(
 /** 
 You can also observe all actions dispatched to the store.
 **/
-const listenToAllObserver = createObserver( $action => $action.pipe(
+const listenToAllObserver = createObserver( action$ => action$.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
 ) ) 
 
@@ -153,8 +153,8 @@ Typescript version:
 import { Observer, ofType } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 import store from './store'
-import { Store, Action } from './types'
-import { Observable } from 'rxjs'
+import { Store, Action, IAmListeningAction, BroadcastMessageAction, ListenToMeAction } from './types'
+import { Observable, Subject } from 'rxjs'
 /**
  * To enable this feature, make sure to set `experimentalDecorators` to
  * true inside your jsconfig or tsconfig file.
@@ -163,9 +163,9 @@ import { Observable } from 'rxjs'
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
 class ListenObserver {
     @Observer<Store, Action>()
-    listenToMeHandler( $action: Observable<Action> ) {
-        return $action.pipe( 
-            ofType( "LISTEN_TO_ME" ),
+    listenToMeHandler( action$: Subject<Action> ): Observable<IAmListeningAction> {
+        return action$.pipe( 
+            ofType<ListenToMeAction>( "LISTEN_TO_ME" ),
             mapTo( { type: "I_AM_LISTENING" } )
         )
     }
@@ -176,8 +176,8 @@ You can also observe all actions dispatched to the store.
 **/
 class BroadcastObserver {
     @Observer<Store, Action>()
-    allHandler( $action: Observable<T> ) {
-        return $action.pipe(
+    allHandler( action$: Subject<T> ): Observable<BroadcastMessageAction> {
+        return action$.pipe(
             mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
         )
     }
@@ -199,16 +199,16 @@ import store from './store'
 // You can add multiple observers inside a single class.
 class Observers {
     @Observer()
-    listenToMeHandler( $action ) {
-        return $action.pipe( 
+    listenToMeHandler( action$ ) {
+        return action$.pipe( 
             ofType( "LISTEN_TO_ME" ),
             mapTo( { type: "I_AM_LISTENING" } )
         )
     }
 
     @Observer()
-    allHandler( $action ) {
-        return $action.pipe(
+    allHandler( action$ ) {
+        return action$.pipe(
             mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
         )
     }
@@ -225,7 +225,7 @@ store.addObservers( [ Observers ] )
  * observable stream, it will dispatch the same action
  * piped to it. 
  * */
-store.addObserver( $action => $action )
+store.addObserver( action$ => action$ )
 ```
 
 

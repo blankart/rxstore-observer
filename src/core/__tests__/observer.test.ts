@@ -1,8 +1,8 @@
 import Observer from '../observer'
-import { map, mapTo, tap } from 'rxjs/operators'
-import { Action, State, reducer } from '../../templates/mock-store'
+import { map } from 'rxjs/operators'
+import { Action, State, reducer, ChangeDummyField2Action, ChangeDummyField3Action } from '../../templates/mock-store'
 import createRxStore from '../create-rx-store'
-import { Observable } from 'rxjs'
+import { Observable, Subject } from 'rxjs'
 import ofType from '../of-type'
 
 describe( 'MakeObserver', () => {
@@ -11,9 +11,9 @@ describe( 'MakeObserver', () => {
         const mockFunction2 = jest.fn()
         class DummyStoreObserver1 {
             @Observer<State, Action>()
-            handleSideEffect( $action: Observable<Action> ) {
+            handleSideEffect( action$: Subject<Action> ): Observable<ChangeDummyField2Action> {
                 mockFunction1()
-                return $action.pipe(
+                return action$.pipe(
                     ofType( 'CHANGE_DUMMY_FIELD_1' ),
                     map( action => ( { type: "CHANGE_DUMMY_FIELD_2", payload: action.payload } ) )
                 )
@@ -22,9 +22,9 @@ describe( 'MakeObserver', () => {
 
         class DummyStoreObserver2 {
             @Observer<State, Action>()
-            handleSideEffect( $action: Observable<Action> ) {
+            handleSideEffect( action$: Subject<Action> ): Observable<ChangeDummyField3Action> {
                 mockFunction2()
-                return $action.pipe(
+                return action$.pipe(
                     ofType( 'CHANGE_DUMMY_FIELD_2' ),
                     map( action => ( { type: "CHANGE_DUMMY_FIELD_3", payload: action.payload } ) )
                 )

@@ -1,5 +1,5 @@
 import { Action, ObserverFunction, RxDispatch } from "../types"
-import { Observable, Subscription } from 'rxjs'
+import { BehaviorSubject, Subject, Subscription } from 'rxjs'
 import observerCreator from "../internals/observer-creator"
 
 /**
@@ -11,8 +11,8 @@ import observerCreator from "../internals/observer-creator"
  * `store.addObservers`
  * @example
  * ```
- * const sampleObserver = ($action) => {
- *      return $action.pipe( 
+ * const sampleObserver = (action$) => {
+ *      return action$.pipe( 
  *          filter( action => action.type === 'START' ),
  *          mapTo ( { type: "DONE" } ) 
  *      )
@@ -34,7 +34,7 @@ const createObserver = <
 >( 
     observerFunction: ObserverFunction<S,T,V> 
 ) => {
-    return ( $action: Observable<V>, getState: () => S, dispatch: RxDispatch<T> ): Subscription => observerCreator( observerFunction, $action, getState, dispatch )
+    return ( action$: Subject<T>, state$: BehaviorSubject<S> ): Subscription => observerCreator( observerFunction, action$, state$ )
 }
 
 export default createObserver

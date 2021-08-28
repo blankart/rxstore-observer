@@ -1,4 +1,4 @@
-import { MonoTypeOperatorFunction } from 'rxjs'
+import { OperatorFunction } from 'rxjs'
 import { filter } from 'rxjs/operators'
 import { Action } from '../types'
 
@@ -9,7 +9,7 @@ import { Action } from '../types'
  * 
  * @example
  * ```
- * const observer = createObserver( $action => $action.pipe(
+ * const observer = createObserver( action$ => action$.pipe(
  *  ofType( 'PING' ),
  *  mapTo( 'PONG' )
  * ))
@@ -18,11 +18,12 @@ import { Action } from '../types'
  * ```
  * 
  * @param {[ T, ...T[] ]} types 
- * @return {MonoTypeOperatorFunction<A>}
+ * @return {OperatorFunction<A>}
  */
 const ofType = <
     A extends Action, 
+    _A extends Action = Action,
     T = A['type'], 
->( ...types: [ T, ...T[] ] ) => filter<A>( $action => types.includes( $action.type ) )
+>( ...types: [ T, ...T[] ] ): OperatorFunction<_A, A> => filter<A>( action$ => types.includes( action$.type ) ) as unknown as OperatorFunction<_A, A>
 
 export default ofType

@@ -1,5 +1,5 @@
-import { Observable, Subscription } from 'rxjs'
-import { Action, ObserverFunction, RxDispatch } from '../types'
+import { BehaviorSubject, Subject, Subscription } from 'rxjs'
+import { Action, ObserverFunction } from '../types'
 
 /**@internal */
 const observerCreator = <
@@ -9,14 +9,13 @@ const observerCreator = <
     V extends Action = Extract<T, U>,
 >( 
     observerFunction: ObserverFunction<S, T, V>, 
-    $action: Observable<V>, 
-    getState: () => S, 
-    dispatch: RxDispatch<T> 
+    action$: Subject<T>, 
+    state$: BehaviorSubject<S>, 
 ): Subscription => {
-    const $observerable = observerFunction( $action, getState, dispatch )
+    const $observerable = observerFunction( action$, state$ )
     const subscription = $observerable.subscribe( {
         next: newAction => {
-            dispatch( newAction as unknown as T )
+            action$.next( newAction as unknown as T )
         }
     } )
 

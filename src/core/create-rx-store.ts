@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, Subject } from 'rxjs'
+import { BehaviorSubject, Subject } from 'rxjs'
 import { 
     RxStore, 
     ObserverFunction, 
@@ -58,8 +58,8 @@ const createRxStore = <
      * 
      * BehaviorSubject is used to subscribe to state changes. 
      */
-    const $state = new BehaviorSubject<S>( initialState as S )
-    const getState = () => $state.getValue() as S
+    const state$ = new BehaviorSubject<S>( initialState as S )
+    const getState = () => state$.getValue() as S
 
     /**
      * Actions are objects which has a type and a payload.
@@ -70,16 +70,16 @@ const createRxStore = <
      * After every changes, the action is passed as the second argument
      * in the reducer function to change the current state.
      */
-    const $action = new Subject<T>()
-    $action.subscribe( {
+    const action$ = new Subject<T>()
+    action$.subscribe( {
         next: newAction => {
             const newState = rootReducer( getState(), newAction as T )
-            $state.next( newState )
+            state$.next( newState )
         }
     } )
 
     const subscribe = ( subscribeFunction: SubscribeFunction<T> ): () => void => {
-        const subscription = $action.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
+        const subscription = action$.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
         return () => {
             subscription.unsubscribe()
         }
@@ -92,9 +92,8 @@ const createRxStore = <
         if ( typeof observerFunction === 'function' && ! isClass( observerFunction ) ) {
             observerCreator( 
                 observerFunction, 
-                ( $action as unknown as Observable<V> ), 
-                getState, 
-                dispatch 
+                action$,
+                state$, 
             )
             return
         }
@@ -102,7 +101,7 @@ const createRxStore = <
     }
 
     const addObservers = ( newObservers: Array<RxObserverOrObserverClass<S,T>> ) => {
-        newObservers.forEach( observer => {
+        newObservers.forEach( ( observer: RxObserverOrObserverClass<S, T> ) => {
             if ( isClass( observer ) ) {
                 /**
                  * All registered keys and methods from
@@ -122,7 +121,7 @@ const createRxStore = <
                 const key = observer.name as unknown as keyof typeof __observerFactory 
                 if ( __observerFactory.observers[ key ] ) {
                     __observerFactory.observers[ key ].forEach( observerFunction => {
-                        observerCreator( observerFunction, $action, getState, dispatch )
+                        observerCreator( observerFunction, action$, state$ )
                     } )
                     __observerFactory.observers[ key ] = []
                     return
@@ -132,7 +131,7 @@ const createRxStore = <
             }
 
             if ( typeof observer === 'function' ) {
-                observer( $action as BehaviorSubject<T>, getState, dispatch ) 
+                observer( action$, state$ )
                 return
             }
 
@@ -143,8 +142,7 @@ const createRxStore = <
     }
 
     const dispatch = ( newAction: T ) => {
-        const next = ( val: T ): any => $action.next( val ) 
-        next( newAction )
+        action$.next( newAction )
     }
 
     return { getState, subscribe, dispatch, addObserver, addObservers }
