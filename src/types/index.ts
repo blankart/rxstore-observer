@@ -46,7 +46,7 @@ export interface RxStore<
      * ```
      * import { mapTo } from 'rxjs/operators'
      * import { ofType } from 'rxstore-observer'
-     * store.addObserver( $store => $store.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
+     * store.addObserver( action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
      * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
@@ -57,9 +57,9 @@ export interface RxStore<
      * Used to include all observers at once instead of calling 
      * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
      * ```
-     * import { createObserver, ofType } from 'rxstore-observer'
-     * const doSomethingObserver = createObserver( $store => $store.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' })));
-     * const doStuffObserver = createObserver( $store => $store.pipe( ofType('DO_STUFF'), mapTo({ type: 'THEN_DO_THAT' })));
+     * import { ofType } from 'rxstore-observer'
+     * const doSomethingObserver = action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }));
+     * const doStuffObserver = action$ => action$.pipe( ofType('DO_STUFF'), mapTo({ type: 'THEN_DO_THAT' }));
      * 
      * store.addObservers([
      * doSomethingObserver,

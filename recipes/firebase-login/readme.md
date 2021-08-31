@@ -7,7 +7,7 @@ This recipe can be used for handling login sessions using firebase and RxStore O
 
 ### Undecorated version:
 ```javascript
-import { createObserver, ofType } from 'rxstore-observer'
+import { ofType } from 'rxstore-observer'
 import { from } from 'rxjs'
 import { map, mapTo, megeMap, tap, filter } from 'rxjs/operators'
 import * as Constants from './constants'
@@ -15,7 +15,7 @@ import { setError, setUser, setLoading } from './actions'
 import { loginUser as loginUserResolver, signoutUser as signoutUserResolver } from './resolvers'
 import { push } from 'rxstore-react-router'
 
-export const loginUserObserver = createObserver( ( action$, store$ ) => action$.pipe(
+export const loginUserObserver = ( action$, store$ ) => action$.pipe(
     ofType( Constants.LOGIN_USER ),
     tap( () => action$.next( setLoading( true ) ) ),
     mergeMap( action => from( 
@@ -38,9 +38,9 @@ export const loginUserObserver = createObserver( ( action$, store$ ) => action$.
         } ),
     ) ),
     mapTo( push( '/dashboard' ) ),
-) )
+)
 
-export const signoutUserObserver = createObserver( ( action$, store$ ) => action$.pipe(
+export const signoutUserObserver = ( action$, store$ ) => action$.pipe(
     ofType( Constants.SIGNOUT_USER ),
     tap( () => action$.next( setLoading( true ) ) ),
     switchMap( () => from( signoutUserResolver() ) ),
@@ -49,7 +49,7 @@ export const signoutUserObserver = createObserver( ( action$, store$ ) => action
         action$.next( setUser( undefined ) ) 
     } ),
     mapTo( push( '/login' ) )
-) )
+)
 ```
 
 `store.js`

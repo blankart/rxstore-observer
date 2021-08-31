@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject } from 'rxjs'
+import { BehaviorSubject, merge, ReplaySubject, Subject } from 'rxjs'
 import { 
     RxStore, 
     ObserverFunction, 
@@ -10,7 +10,7 @@ import {
 } from '../types'
 import { __observerFactory } from '../internals/__observer-factory'
 import isClass from '../utils/is-class'
-import observerCreator from '../internals/observer-creator'
+import { mergeMap } from 'rxjs/operators'
 
 /**
  * Function for creating an RxJS Store.
@@ -85,16 +85,32 @@ const createRxStore = <
         }
     }
 
+    const _observer$ = new ReplaySubject<ObserverFunction<S, T>>( 1 )
+    const _observers$ = new BehaviorSubject<Array<ObserverFunction<S, T>>>( [] )
+
+    /**
+     * Observers factory derived from merging
+     * all observers from `addObserver` and `addObservers`
+     */
+    const observers$ = _observer$.pipe(
+        mergeMap( observer => merge( observer( action$, state$ ), ..._observers$.value.map( o => o( action$, state$ ) ) ) )
+    )
+
+    /**
+     * Side effects handler.
+     * Actions from the observable streams will be
+     * passed to the original action$ stream.
+     */
+    observers$.subscribe(
+        next => action$.next( next )
+    )
+
     const addObserver = <
         U extends Action, 
         V extends Action = Extract<T, U>
     >( observerFunction: ObserverFunction<S, T, V> ) => { 
         if ( typeof observerFunction === 'function' && ! isClass( observerFunction ) ) {
-            observerCreator( 
-                observerFunction, 
-                action$,
-                state$, 
-            )
+            _observer$.next( observerFunction as unknown as ObserverFunction<S, T> )
             return
         }
         throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observerFunction }` )
@@ -121,7 +137,7 @@ const createRxStore = <
                 const key = observer.name as unknown as keyof typeof __observerFactory 
                 if ( __observerFactory.observers[ key ] ) {
                     __observerFactory.observers[ key ].forEach( observerFunction => {
-                        observerCreator( observerFunction, action$, state$ )
+                        _observer$.next( observerFunction )
                     } )
                     __observerFactory.observers[ key ] = []
                     return
@@ -131,7 +147,7 @@ const createRxStore = <
             }
 
             if ( typeof observer === 'function' ) {
-                observer( action$, state$ )
+                _observer$.next( observer )
                 return
             }
 

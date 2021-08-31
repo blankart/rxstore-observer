@@ -1,22 +1,22 @@
 import createRxStore from '../create-rx-store'
 import { map, tap } from 'rxjs/operators'
 import { Action, reducer, State, ChangeDummyField2Action, ChangeDummyField3Action, ChangeDummyField1Action } from '../../templates/mock-store'
-import createObserver from '../create-observer'
 import ofType from '../of-type'
+import { ObserverFunction } from 'src/types'
 
 describe( 'createObserver', () => {
-    test( 'Register createObserver instance inside addObservers', () => {
+    test( 'Register function instances inside addObservers', () => {
         const dummyStore = createRxStore( reducer )
 
-        const dummyObserver1 = createObserver<State, Action, ChangeDummyField2Action>( action$ => action$.pipe(
+        const dummyObserver1: ObserverFunction<State, Action, ChangeDummyField2Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) )
-        ) )
+        )
 
-        const dummyObserver2 = createObserver<State, Action, ChangeDummyField3Action>( action$ => action$.pipe(
+        const dummyObserver2: ObserverFunction<State, Action, ChangeDummyField3Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_2' ),
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) ),
-        ) )
+        )
 
         dummyStore.addObservers( [
             dummyObserver1,
@@ -32,11 +32,11 @@ describe( 'createObserver', () => {
     test( 'Calling action$.next() should trigger another dispatch', () => {
         const dummyStore = createRxStore( reducer )
 
-        const dummyObserver1 = createObserver<State, Action, ChangeDummyField3Action>( action$ => action$.pipe(
+        const dummyObserver1: ObserverFunction<State, Action, ChangeDummyField3Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             tap( action => action$.next( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) ),
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) )
-        ) )
+        )
 
         dummyStore.addObservers( [
             dummyObserver1,
@@ -52,13 +52,13 @@ describe( 'createObserver', () => {
         const dummyStore = createRxStore( reducer )
         const stubbedState: Array<State> = []
 
-        const dummyObserver1 = createObserver<State, Action, ChangeDummyField3Action>( ( action$, state$ ) => action$.pipe(
+        const dummyObserver1: ObserverFunction<State, Action, ChangeDummyField3Action> = ( action$, state$ ) => action$.pipe(
             ofType<ChangeDummyField1Action>( 'CHANGE_DUMMY_FIELD_1' ),
             tap( () => stubbedState.push( state$.value ) ),
             tap( action => action$.next( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) ),
             tap( () => stubbedState.push( state$.value ) ), 
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) )
-        ) )
+        )
 
         dummyStore.addObservers( [
             dummyObserver1,

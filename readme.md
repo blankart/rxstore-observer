@@ -7,13 +7,13 @@ RxStore Observer is a powerful redux-inspired state management library using [Re
 > Why should i switch to *RxStore Observer?*
 
 ```jsx
-import { createObserver, ofType } from 'rxstore-observer'
+import { ofType } from 'rxstore-observer'
 import Api from './api'
 import { mergeMap, map, tap, debounceTime } from 'rxjs/operators'
 import { from } from 'rxstore'
 import store from './store'
 
-const whenStartFetching = createObserver( ( action$, state$ ) => {
+const whenStartFetching = ( action$, state$ ) => {
    return action$.pipe(
        // Only allow 'START_FETCHING' to enter the stream.
        ofType( 'START_FETCHING' ),
@@ -28,7 +28,7 @@ const whenStartFetching = createObserver( ( action$, state$ ) => {
        // end of the action stream. dispatches the result.
        map( result => ( { type: 'END_FETCHING', result } ) )
    )
-} )
+}
 
 store.addObservers( [ whenStartFetching ] )
 ```
@@ -45,7 +45,7 @@ If you’re not familiar with [Redux](https://redux.js.org/) and [ReactiveX](htt
 
 ![https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9](https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9)
 
-Since *action objects* act like a stream of objects used for redefining the next shape of the store, it would make more sense to convert it to an observable. Defining more observers using `addObserver` or `addObservers` creates a new observable instance subscribed to the original action streams. By looking at the example above, the `createObserver` function passes an `action$` , which is the original action stream of your store. It then returns a new `action$` observable instance which can be used for subscribing to the current action dispatched. 
+Since *action objects* act like a stream of objects used for redefining the next shape of the store, it would make more sense to convert it to an observable. Defining more observers using `addObserver` or `addObservers` creates a new observable instance subscribed to the original action streams. By looking at the example above, the `whenStartFetching` function has an `action$` , which is the original action stream of your store. It then returns a new `action$` observable instance which can be used for subscribing to the current action dispatched. 
 
 ## Getting Started
 
@@ -126,27 +126,27 @@ store.addObserver( action$ => action$.pipe(
 Alternatively, you can create multiple instances of `observers` then pass it inside the `addObservers` function.
 
 ```jsx
-import { createObserver, ofType } from 'rxstore-observer'
+import { ofType } from 'rxstore-observer'
 import { mapTo } from 'rxjs/operators'
 import store from './store'
 
 // Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-const listenToMeObserver = createObserver( action$ => action$.pipe(
+const listenToMeObserver = action$ => action$.pipe(
     ofType( "LISTEN_TO_ME" ),
     mapTo( { type: "I_AM_LISTENING" } )
-) 
+)
 
 /** 
 You can also observe all actions dispatched to the store.
 **/
-const listenToAllObserver = createObserver( action$ => action$.pipe(
+const listenToAllObserver = action$ => action$.pipe(
     mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
-) ) 
+)
 
 store.addObservers( [ listenToMeObserver, listenToAllObserver ] )
 ```
 
-Both approaches work the same. But calling `addObservers` can accept both `createObserver` instances and `Observer` decorated classes. 
+Both approaches work the same. But calling `addObservers` can accept both `function` instances and `Observer` decorated classes. 
 
 Typescript version:
 ```typescript

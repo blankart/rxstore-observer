@@ -9,10 +9,10 @@ import { Action } from '../types'
  * 
  * @example
  * ```
- * const observer = createObserver( action$ => action$.pipe(
+ * const observer = action$ => action$.pipe(
  *  ofType( 'PING' ),
  *  mapTo( 'PONG' )
- * ))
+ * )
  * 
  * store.addObservers( [ observer ] )
  * ```
