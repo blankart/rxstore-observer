@@ -20,12 +20,19 @@
     "resolveJsonModule": true,
     "removeComments": true,
     "noEmit": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false
   },
   "exclude": [
     "node_modules"
   ],
   "include": [
-    "./src/**/*.ts"
-  ]
+    "./src/**/*.ts", "src/core/rx-model.ts.BAK"
+  ],
+  "ts-node": {
+      "transpileOnly": true, // you can specify ts-node options here
+      "compilerOptions": {
+        "module": "commonjs" // you can also override compilerOptions.  Only ts-node will use these overrides
+      }
+  },
 }

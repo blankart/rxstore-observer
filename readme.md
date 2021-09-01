@@ -1,69 +1,26 @@
 ![https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observable%20Banner.jpg?alt=media&token=84e14c8f-9a16-4bf8-8ebb-2d020a317746](https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observable%20Banner.jpg?alt=media&token=84e14c8f-9a16-4bf8-8ebb-2d020a317746)
 
-RxStore Observer is a powerful redux-inspired state management library using [ReactiveX](http://reactivex.io/) as its core. This provides a complete tool for scalable javascript applications by offering built-in side-effects handling using *Observables.*
-
-## Usage
-
-> Why should i switch to *RxStore Observer?*
-
-```jsx
-import { ofType } from 'rxstore-observer'
-import Api from './api'
-import { mergeMap, map, tap, debounceTime } from 'rxjs/operators'
-import { from } from 'rxstore'
-import store from './store'
-
-const whenStartFetching = ( action$, state$ ) => {
-   return action$.pipe(
-       // Only allow 'START_FETCHING' to enter the stream.
-       ofType( 'START_FETCHING' ),
-       // debounces the action pipe to avoid multiple server fetching.
-       debounceTime( 1000 ),
-       // dispatches an action which fires a loading indicator.
-       tap( () => action$.next( { type: 'IS_FETCHING', payload: true } ) ),
-       // gets the result from an external asynchronous function.
-       mergeMap( action => from( Api.fetch( action.payload ) ),
-       // sets the loading state to false.
-       tap( () => action$.next( { type: 'IS_FETCHING', payload: false } ),
-       // end of the action stream. dispatches the result.
-       map( result => ( { type: 'END_FETCHING', result } ) )
-   )
-}
-
-store.addObservers( [ whenStartFetching ] )
-```
-
-The `store` is a store instance using `createRxStore` function. `whenStartFetching` will automatically subscribe to any dispatched function of type `START_FETCHING` to run some side-effects to the store. It dispatches `IS_FETCHING` in the middle of the stream of actions which is dispatched immediately. As your application gets bigger, RxStore Observer promises to handle most of the work. 🎊
-
-When building your app, you don’t need to think about your application side-effects again after writing it.
-
-If you’re not familiar with [Redux](https://redux.js.org/) and [ReactiveX](http://reactivex.io/), it might be a little bit challenging at first. This is a powerful tool for code-splitting and predictability of your application state.
-
-## Why Observers?
-
----
-
-![https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9](https://firebasestorage.googleapis.com/v0/b/reneenico-freedom-wall.appspot.com/o/RxStore%20Observer%20Diagram.jpg?alt=media&token=a903bd67-4e87-493c-89b2-277798346fd9)
-
-Since *action objects* act like a stream of objects used for redefining the next shape of the store, it would make more sense to convert it to an observable. Defining more observers using `addObserver` or `addObservers` creates a new observable instance subscribed to the original action streams. By looking at the example above, the `whenStartFetching` function has an `action$` , which is the original action stream of your store. It then returns a new `action$` observable instance which can be used for subscribing to the current action dispatched. 
+# rxstore-observer
+RxStore Observer is a redux-inspired state management library using [ReactiveX](http://reactivex.io/) at its core. This provides a complete tool for scalable javascript applications by offering built-in side-effects handling using *Observables.*
 
 ## Getting Started
 
 ---
 
-For installing RxStore core:
+Install using npm:
 
 ```jsx
 npm install rxstore-observer --save
 ```
 
-## Creating your first RxStore
+Install using yarn:
+```
+yarn add rxstore-observer
+```
+
+## Usage Sample
 
 ---
-
-Since this library is heavily inspired by Redux, you may want to learn basic concepts [here](https://redux.js.org/tutorials/essentials/part-1-overview-concepts).
-
-To create a new store:
 
 ```jsx
 import { createRxStore } from 'rxstore-observer'
@@ -93,146 +50,149 @@ store.subscribe( (action) => {
 store.dispatch( { type: 'INCREMENT' } )
 ```
 
-If you're coming from Redux, this is already a familiar pattern for creating a store. Because in fact, this library works like Redux under the hood. You can pass existing redux store enhancers in `createRxStore` .
-
-## Creating your first `observers`
-
----
-
-Similar to how [Redux-observable](https://redux-observable.js.org/) and [Redux Saga](https://redux-saga.js.org/) works, it can perform various side-effects based on current action being dispatch inside your store. This is a built-in feature of RxStore Observer.
-
-To create an observer:
-
+## Using Decorators
 ```jsx
-import store from './store'
-import { mapTo } from 'rxjs/operators'
-import { ofType } from 'rxstore-observer'
+import { createRxStore, RxModel, ActionMethod, State, createModel } from 'rxstore-observer'
 
-// Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-store.addObserver( action$ => action$.pipe(
-    ofType( "LISTEN_TO_ME" ),
-    mapTo({ type: "I_AM_LISTENING" } )
-) )
+@RxModel
+class Counter {
+    @State counter = 0
 
-/** 
-You can also observe to all actions dispatched to the store.
-**/
-store.addObserver( action$ => action$.pipe(
-    mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
-) ) 
+    @ActionMethod
+    increment() {
+        this.counter+= 1
+    }
 
+    @ActionMethod
+    decrement() {
+        this.counter+= 1
+    }
+}
+
+const { reducer, initialState, actions } = createModel( Counter )
+
+// Create a mew store instance using `createRxStore`
+const store = createRxStore( reducer, initialState )
+store.subscribe( (action) => {
+    // Subscribing to any state changes inside your store continer.
+    console.log( 'ACTION DISPATCHED: ', action )
+    console.log( 'CURRENT STATE: ', store.getState() ) 
+} )
+
+// Used for dispatching an action to the store.
+store.dispatch( actions.increment() )
 ```
 
-Alternatively, you can create multiple instances of `observers` then pass it inside the `addObservers` function.
-
+## Adding side effects
 ```jsx
-import { ofType } from 'rxstore-observer'
-import { mapTo } from 'rxjs/operators'
-import store from './store'
+import { createRxStore, RxModel, ActionMethod, State, createModel, ofType, Observer, ActionType } from 'rxstore-observer'
+import { debounceTime, mapTo, tap } from 'rxjs/operators'
 
-// Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-const listenToMeObserver = action$ => action$.pipe(
-    ofType( "LISTEN_TO_ME" ),
-    mapTo( { type: "I_AM_LISTENING" } )
-)
+@RxModel
+class Counter {
+    @State counter = 0
+    @State done = false
 
-/** 
-You can also observe all actions dispatched to the store.
-**/
-const listenToAllObserver = action$ => action$.pipe(
-    mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched." } )
-)
+    @ActionType('increment') incrementType
+    @ActionMethod
+    increment() {
+        this.counter+= 1
+    }
 
-store.addObservers( [ listenToMeObserver, listenToAllObserver ] )
-```
+    @ActionType('decrement') decrementType
+    @ActionMethod
+    decrement() {
+        this.counter+= 1
+    }
 
-Both approaches work the same. But calling `addObservers` can accept both `function` instances and `Observer` decorated classes. 
+    @ActionMethod
+    setDone( value ) {
+        this.done = value
+    }
 
-Typescript version:
-```typescript
-import { Observer, ofType } from 'rxstore-observer'
-import { mapTo } from 'rxjs/operators'
-import store from './store'
-import { Store, Action, IAmListeningAction, BroadcastMessageAction, ListenToMeAction } from './types'
-import { Observable, Subject } from 'rxjs'
-/**
- * To enable this feature, make sure to set `experimentalDecorators` to
- * true inside your jsconfig or tsconfig file.
- **/
-
-// Observes to all occurrences of LISTEN_TO_ME action type then dispatch I_AM_LISTENING.
-class ListenObserver {
-    @Observer<Store, Action>()
-    listenToMeHandler( action$: Subject<Action> ): Observable<IAmListeningAction> {
+    // Using RxJS Observables!
+    @Observer
+    watchCounter( action$ ) {
         return action$.pipe( 
-            ofType<ListenToMeAction>( "LISTEN_TO_ME" ),
-            mapTo( { type: "I_AM_LISTENING" } )
+            ofType(this.incrementType, this.decrementType),
+            tap(() => action$.next(this.setDone(false))),
+            debounceTime(1000),
+            mapTo(this.setDone(true))
         )
+    }
+
+}
+
+const { reducer, initialState, actions } = createModel( Counter )
+
+// Create a mew store instance using `createRxStore`
+const store = createRxStore( reducer, initialState )
+store.subscribe( (action) => {
+    // Subscribing to any state changes inside your store continer.
+    console.log( 'ACTION DISPATCHED: ', action )
+    console.log( 'CURRENT STATE: ', store.getState() ) 
+} )
+
+store.dispatch( actions.increment() )
+```
+
+Output:
+```
+ACTION DISPATCHED: { type: 'Counter/increment', payload: undefined }
+CURRENT STATE: { counter: 1, done: false }
+ACTION DISPATCHED: { type: 'Counter/setDone', payload: false }
+CURRENT STATE: { counter: 1, done: false }
+
+// After 1000ms
+ACTION DISPATCHED: { type: 'Counter/setDone', payload: true }
+CURRENT STATE: { counter: 1, done: true }
+```
+
+
+## Shared Models
+```ts
+import { createRxStore, RxModel, ActionMethod, State, createModel, ofType, Observer, ActionType, Signal } from 'rxstore-observer'
+
+class LoadingModel {
+    @State loading = false
+
+    @ActionMethod
+    setLoading( value ) {
+        this.loading = value
     }
 }
 
-/** 
-You can also observe all actions dispatched to the store.
-**/
-class BroadcastObserver {
-    @Observer<Store, Action>()
-    allHandler( action$: Subject<T> ): Observable<BroadcastMessageAction> {
+@RxModel
+class User extends LoadingModel {
+    @State user = undefined
+
+    @ActionType('fetchUser') fetchUserType
+    @ActionMethod
+    fetchUser() {
+        this.loading = true
+    }
+
+    @ActionType('userFetched') userFetchedType
+    @ActionMethod
+    userFetched() {
+        this.loading = false
+    }
+
+    @ActionMethod
+    setUser(name) {
+        this.user = name
+    }
+
+    @Observer
+    fetchObserver( action$ ) {
         return action$.pipe(
-            mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
+            ofType(this.fetchUserType),
+            mergeMap( () => from(userAPI()) )
+            map(user => {
+                action$.next(this.userFetched())
+                return this.setUser(user)
+            })
         )
     }
 }
-
-store.addObservers( [ ListenObserver, BroadcastObserver ] )
 ```
-
-Or we can combine both observer classes to a single class:
-```typescript
-import { Observer, ofType } from 'rxstore-observer'
-import { mapTo } from 'rxjs/operators'
-import store from './store'
-/**
- * To enable this feature, make sure to set `experimentalDecorators` to
- * true inside your jsconfig or tsconfig file.
- **/
-
-// You can add multiple observers inside a single class.
-class Observers {
-    @Observer()
-    listenToMeHandler( action$ ) {
-        return action$.pipe( 
-            ofType( "LISTEN_TO_ME" ),
-            mapTo( { type: "I_AM_LISTENING" } )
-        )
-    }
-
-    @Observer()
-    allHandler( action$ ) {
-        return action$.pipe(
-            mapTo( { type: "BROADCAST_MESSAGE", message: "An action has been dispatched" } )
-        )
-    }
-}
-
-store.addObservers( [ Observers ] )
-```
-
-### Don't do this:
-```javascript
-/**
- * This will result to an infinite loop to your store.
- * Since we're creating a new instance of the action
- * observable stream, it will dispatch the same action
- * piped to it. 
- * */
-store.addObserver( action$ => action$ )
-```
-
-
-## Documentations
-
----
-
-Since the project is currently under development, the existing APIs will most likely change. Before building an official documentation, it's important that this library is battle tested for production sites.
-
-Documentations page will be constructed soon.

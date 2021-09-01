@@ -10,6 +10,13 @@ export const initialState: State = {
     dummyField3: '',
 }
 
+export type ActionMethods = {
+    changeDummyField1: ( a: string ) => void
+    changeDummyField2: ( a: string ) => void
+    changeDummyField3: ( a: string ) => void
+    nothingMethod: () => void
+}
+
 export type Types = "CHANGE_DUMMY_FIELD_1" | "CHANGE_DUMMY_FIELD_2" | "CHANGE_DUMMY_FIELD_3"
 
 export interface ChangeDummyField1Action {

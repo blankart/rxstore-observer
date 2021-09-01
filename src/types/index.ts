@@ -48,7 +48,6 @@ export interface RxStore<
      * import { ofType } from 'rxstore-observer'
      * store.addObserver( action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
-     * @param {ActionType<V>} type action type to subscribe to.
      * @param {W} observerFunction callback function.
      * 
      */
@@ -83,11 +82,13 @@ export interface SubscribeFunction<T extends Action> {
 }
 
 export type Action<T = any> =  {
-    type: T,
-    [key: string]: any
+    [ key: string ]: T
 }
 
-export type ActionType<T extends Action> = T["type"]
+export type ActionWithPayload<T = any, P = any> =  {
+    type: T
+    payload: P
+}
 
 export interface RxStoreMiddleware<
     S extends Record<string, any> = Record<string, any>,
@@ -126,3 +127,32 @@ export type RxReducersMapObject<
 export type StateFromReducersMapObject<M> = M extends RxReducersMapObject<Record<string, any>, Action>
   ? { [ P in keyof M ]: M[ P ] extends RxReducer<infer S, any> ? S : never }
   : never
+
+export type RxModelMappedActions<
+    A extends Record<string, ( ...args: any ) => void>
+> = { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }
+
+export type RxModelObservableActions<A extends Record<string, ( ...args: any ) => void>> = RxModelMappedActions<A>[ keyof A ]
+
+export type RxModelActionOf<A extends Record<string, ( ...args: any ) => void>, S extends keyof A> = RxModelMappedActions<A>[S]
+
+export interface RxModelDecorated<
+    S extends Record<string, any>,
+    A extends Record<string, ( ...args: any ) => void>
+> {
+    initialState: S,
+    actions: { [ K in keyof A ]: ( a?: Parameters<A[K]>[0] ) => ActionWithPayload<K, Parameters<A[K]>[0]> }
+    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>>
+    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>
+}
+
+export interface PreprocessedRxModelPrototype<
+    S extends Record<string, any>,
+    A extends Record<string, ( ...args: any ) => void>
+> {
+    states: Array<keyof S>,
+    reducersMap: { [ K in keyof A ]: { key: K, fn: ( s: S ) => S } }[ keyof A ][]
+    actions: { [ K in keyof A ]: ( a?: Parameters<A[K]>[0] ) => ActionWithPayload<K, Parameters<A[K]>[0]> }
+    actionTypes: Array<A['type']>
+    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>>
+}
