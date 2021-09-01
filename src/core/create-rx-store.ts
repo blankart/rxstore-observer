@@ -8,8 +8,6 @@ import {
     RxStoreEnhancer,
     RxObserverOrObserverClass,
 } from '../types'
-import { __observerFactory } from '../internals/__observer-factory'
-import isClass from '../utils/is-class'
 import { mergeMap } from 'rxjs/operators'
 
 /**
@@ -28,11 +26,11 @@ const createRxStore = <
     initialState?: S,
     enhancer?: RxStoreEnhancer<S, T>
 ): RxStore<S, T> => {
-    if ( typeof rootReducer !== 'function' || isClass( rootReducer ) ) {
+    if ( typeof rootReducer !== 'function' ) {
         throw new Error( 'Invalid reducer parameter. Reducer must be of type `function`.' )
     }
 
-    if ( enhancer && ( typeof enhancer !== 'function' || isClass( rootReducer ) ) ) {
+    if ( enhancer && ( typeof enhancer !== 'function' ) ) {
         throw new Error( 'Invalid enhancer function. Enhancer must be of type `function`' )
     }
 
@@ -109,51 +107,21 @@ const createRxStore = <
         U extends Action, 
         V extends Action = Extract<T, U>
     >( observerFunction: ObserverFunction<S, T, V> ) => { 
-        if ( typeof observerFunction === 'function' && ! isClass( observerFunction ) ) {
+        if ( typeof observerFunction === 'function' ) {
             _observer$.next( observerFunction as unknown as ObserverFunction<S, T> )
             return
         }
-        throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observerFunction }` )
+        throw new Error( `Invalid observer passed. Expected an observer function instance. But received: ${ observerFunction }` )
     }
 
     const addObservers = ( newObservers: Array<RxObserverOrObserverClass<S,T>> ) => {
         newObservers.forEach( ( observer: RxObserverOrObserverClass<S, T> ) => {
-            if ( isClass( observer ) ) {
-                /**
-                 * All registered keys and methods from
-                 * decorated class methods will be enqueued
-                 * here.
-                 * 
-                 * It accesses the `__observerFactory` object and
-                 * scans all observer functions that matches the class name
-                 * passed inside the `addObservers`
-                 * 
-                 * The approach for registering an observer using decorators
-                 * is still subject to change, as it imposes some weaknesses
-                 * (e.g. users cannot reuse decorated classes as observers 
-                 * to other store instances since __observerFactory only takes
-                 * note of the class name. )
-                 */
-                const key = observer.name as unknown as keyof typeof __observerFactory 
-                if ( __observerFactory.observers[ key ] ) {
-                    __observerFactory.observers[ key ].forEach( observerFunction => {
-                        _observer$.next( observerFunction )
-                    } )
-                    __observerFactory.observers[ key ] = []
-                    return
-                } 
-
-                throw new Error( `${ key } is not a valid observer class. Make sure to provide a class with decorated methods (@MakeObserver).` )
-            }
-
             if ( typeof observer === 'function' ) {
                 _observer$.next( observer )
                 return
             }
 
-            if ( ! observer || typeof observer !== 'object' || ! observer.prototype.constructor ) {
-                throw new Error( `Invalid observer passed. Expected an observer function or class instance. But received: ${ observer }` )
-            }
+            throw new Error( `Invalid observer passed. Expected an observer function instance. But received: ${ observer }` )
         } )
     }
 

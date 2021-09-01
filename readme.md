@@ -123,10 +123,11 @@ class Counter {
 
 }
 
-const { reducer, initialState, actions } = createModel( Counter )
+const { reducer, initialState, actions, observers } = createModel( Counter )
 
 // Create a mew store instance using `createRxStore`
 const store = createRxStore( reducer, initialState )
+store.addObservers( observers )
 store.subscribe( (action) => {
     // Subscribing to any state changes inside your store continer.
     console.log( 'ACTION DISPATCHED: ', action )
