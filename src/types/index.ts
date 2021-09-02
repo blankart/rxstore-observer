@@ -129,30 +129,30 @@ export type StateFromReducersMapObject<M> = M extends RxReducersMapObject<Record
   : never
 
 export type RxModelMappedActions<
-    A extends Record<string, ( ...args: any ) => void>
-> = { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }
+    A extends Record<string, ( ...args: any[] ) => void>
+> = { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }
 
-export type RxModelObservableActions<A extends Record<string, ( ...args: any ) => void>> = RxModelMappedActions<A>[ keyof A ]
+export type RxModelObservableActions<A extends Record<string, ( ...args: any[] ) => void>> = RxModelMappedActions<A>[ keyof A ]
 
-export type RxModelActionOf<A extends Record<string, ( ...args: any ) => void>, S extends keyof A> = RxModelMappedActions<A>[S]
+export type RxModelActionOf<A extends Record<string, ( ...args: any[] ) => void>, S extends keyof A> = RxModelMappedActions<A>[S]
 
 export interface RxModelDecorated<
     S extends Record<string, any>,
     A extends Record<string, ( ...args: any ) => void>
 > {
     initialState: S,
-    actions: { [ K in keyof A ]: ( a?: Parameters<A[K]>[0] ) => ActionWithPayload<K, Parameters<A[K]>[0]> }
-    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>>
-    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>
+    actions: { [ K in keyof A ]: ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
+    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
+    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>
 }
 
 export interface PreprocessedRxModelPrototype<
     S extends Record<string, any>,
-    A extends Record<string, ( ...args: any ) => void>
+    A extends Record<string, ( ...args: any[] ) => void>
 > {
     states: Array<keyof S>,
     reducersMap: { [ K in keyof A ]: { key: K, fn: ( s: S ) => S } }[ keyof A ][]
-    actions: { [ K in keyof A ]: ( a?: Parameters<A[K]>[0] ) => ActionWithPayload<K, Parameters<A[K]>[0]> }
+    actions: { [ K in keyof A ]: (s: string) => ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
     actionTypes: Array<A['type']>
-    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>[0]> }[ keyof A ]>>
+    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
 }

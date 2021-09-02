@@ -79,9 +79,9 @@ describe( 'RxModel', () => {
 
             @Observer
             watchDummyField1( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
-                return action$.pipe(
+                return action$.pipe( 
                     ofType<RxModelActionOf<ActionMethods, 'changeDummyField1'>>( this.changeDummyField1ActionType ),
-                    map( action => this.changeDummyField2( action.payload ) )
+                    map( action => this.changeDummyField2( ...action.payload ) )
                 )
             }
 
@@ -89,7 +89,7 @@ describe( 'RxModel', () => {
             watchDummyField1_2( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
                 return action$.pipe(
                     ofType<RxModelActionOf<ActionMethods, 'changeDummyField1'>>( this.changeDummyField1ActionType ),
-                    map( action => this.changeDummyField3( action.payload ) )
+                    map( action => this.changeDummyField3( ...action.payload ) )
                 )
             }
         }

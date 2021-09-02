@@ -47,7 +47,7 @@ const createRxStore = <
      * the default value of the reducer.
      */
     if ( ! initialState ) {
-        initialState = rootReducer( ( undefined as unknown ) as S, {} as T )
+        initialState = rootReducer( ( undefined as unknown ) as S, { type: '@@RXSTORE/INIT' } as unknown as T )
     }
 
     /**
@@ -57,7 +57,7 @@ const createRxStore = <
      * BehaviorSubject is used to subscribe to state changes. 
      */
     const state$ = new BehaviorSubject<S>( initialState as S )
-    const getState = () => state$.getValue() as S
+    const getState = () => state$.getValue()
 
     /**
      * Actions are objects which has a type and a payload.
@@ -70,17 +70,12 @@ const createRxStore = <
      */
     const action$ = new Subject<T>()
     action$.subscribe( {
-        next: newAction => {
-            const newState = rootReducer( getState(), newAction as T )
-            state$.next( newState )
-        }
+        next: newAction => state$.next( rootReducer( getState(), newAction as T ) )
     } )
 
     const subscribe = ( subscribeFunction: SubscribeFunction<T> ): () => void => {
         const subscription = action$.subscribe( { next: newAction => subscribeFunction( newAction as T ) } )
-        return () => {
-            subscription.unsubscribe()
-        }
+        return () => subscription.unsubscribe() 
     }
 
     const _observer$ = new ReplaySubject<ObserverFunction<S, T>>( 1 )
@@ -125,9 +120,7 @@ const createRxStore = <
         } )
     }
 
-    const dispatch = ( newAction: T ) => {
-        action$.next( newAction )
-    }
+    const dispatch = ( newAction: T ) => action$.next( newAction )
 
     return { getState, subscribe, dispatch, addObserver, addObservers }
 }

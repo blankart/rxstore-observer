@@ -4,20 +4,9 @@ export const RxModel = <
     S extends Record<string, any>,
     T extends Action,
 >( target: new () => any ): new () => any => {
+    /** @internal model factory */
+    const { name } = target
     const __proto__: PreprocessedRxModelPrototype<S, T> = target.prototype
-    const reducer = ( state: S, action: T ) => {
-        const newState = { ...state }
-        const reducersKeyMap = ( __proto__.reducersMap || [] ).reduce( ( acc, curr ) => {
-            return { ...acc, [ curr.key ]: curr.fn }
-        }, {} as Record<T['type'], ( s: S ) => S> )
-
-        if ( reducersKeyMap[ action.type as T['type'] ] ) {
-            reducersKeyMap[ action.type as T['type'] ].bind( newState )( action.payload )
-        }
-        
-        return { ...newState }
-    }
-
     const targetInstance = new target()
     const initialState = __proto__.states.reduce( ( acc, curr ) => {
         return Object.prototype.hasOwnProperty.call( targetInstance, curr ) ?
@@ -25,11 +14,30 @@ export const RxModel = <
             { ...acc, [ curr ]: null }
     }, {} as S )
 
+    const reducersMap = __proto__.reducersMap || []
+    const reducer = ( state: S = initialState, action: T ): S => {
+        const reducersKeyMap: any = {}
+        const switchReducerKeysMap: any = {}
+        reducersMap.forEach( reducerMap => {
+            reducersKeyMap[ reducerMap.key ] = reducerMap.fn
+            switchReducerKeysMap[ name + '/' + reducerMap.key ] = reducerMap.fn
+        } )
+
+        if ( switchReducerKeysMap[ action.type as T['type'] ] ) {
+            switchReducerKeysMap[ action.type as T['type'] ].bind( Object.assign( reducersKeyMap, state ) )( ...action.payload )
+        }
+
+        return Object.keys( state )
+            .reduce( ( acc, curr ) => ( 
+                { ...acc, [ curr ]: reducersKeyMap[ curr as keyof typeof reducersKeyMap ] } 
+            ) ,{} ) as S
+    }
+
     return class RxModelInstance {
         initialState: S = initialState
         reducer: RxReducer<S, T> = reducer as unknown as RxReducer<S, T>
-        actions = __proto__.actions
-        actionTypes = __proto__.actionTypes
+        actions = Object.keys( __proto__.actions || {} ).reduce( ( acc, curr ) => ( { ...acc, [ curr ]: __proto__.actions[ curr ]( name ) } ) , {} )
+        actionTypes = ( Object.keys( __proto__.actionTypes || {} ) ).reduce( ( acc, curr ) => ( { ...acc, [ curr ]: name + '/' + __proto__.actionTypes[ curr as keyof typeof __proto__.actionTypes ] } ), {} )
         observers = ( __proto__.observers || [] ).map( v => v.bind( { 
             ...this.actions,
             ...this.actionTypes
@@ -40,20 +48,25 @@ export const RxModel = <
 export const ActionMethod = <
     T extends Action
 >( target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor ) => {
-    if ( descriptor.value.bind( {} )() && descriptor.value.bind( {} )().then ) {
-        throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function` )
-    }
+    try {
+        descriptor.value.bind( {} )().then( () => {
+            throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function.` )
+        } ).catch( () => {
+            throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function.` )
+        } )
+    } catch { /** */}
+
     target.actions = {
         ...( target.actions || {} ),
-        [ propertyKey ]: ( payload: T['payload'] ) => ( {
-            type: target.constructor.name + '/' + propertyKey.toString(),
+        [ propertyKey ]: ( className: string ) => ( ...payload: T['payload'] ) => ( {
+            type: className + '/' + propertyKey.toString(),
             payload
         } )
     }
     target.reducersMap = [
         ...( target.reducersMap || [] ),
         {
-            key: target.constructor.name + '/' + propertyKey.toString(),
+            key: propertyKey.toString(),
             fn: descriptor.value
         }
     ]
@@ -75,9 +88,9 @@ export const State = ( target: any, propertyKey: any ) => {
 
 export const createModel = <
     S extends Record<string, any>,
-    A extends Record<string, ( ...args: any ) => void>,
->( instance: any ): RxModelDecorated<S, A> => {
-    const modelInstance = new instance()
+    A extends Record<string, ( ...args: any[] ) => void>,
+>( Instance: new () => any ): RxModelDecorated<S, A> => {
+    const modelInstance = new Instance()
     return modelInstance
 }
 
@@ -85,7 +98,7 @@ export const ActionType = ( method: string ) => {
     return ( target: any, propertyKey: string | symbol  ) => {
         target.actionTypes =  {
             ...( target.actionTypes || {} ),
-            [ propertyKey.toString() ]: target.constructor.name + '/' + method
+            [ propertyKey.toString() ]: method
         }
     }
 }

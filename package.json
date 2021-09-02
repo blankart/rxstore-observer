@@ -1,6 +1,6 @@
 {
   "name": "rxstore-observer",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "React state management tool using RxJS",
   "repository": "blankart/rxstore-observer",
   "main": "lib/rxstore-observer.js",
@@ -35,8 +35,8 @@
   "license": "ISC",
   "dependencies": {
     "@babel/runtime": "^7.13.10",
-    "typescript": "^4.2.3",
-    "rxjs": "^6.6.6"
+    "rxjs": "^6.6.6",
+    "typescript": "^4.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.13.13",

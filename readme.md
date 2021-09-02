@@ -93,6 +93,7 @@ class Counter {
     @State counter = 0
     @State done = false
 
+    // ActionType parameter should match its ActionMethod's method name!
     @ActionType('increment') incrementType
     @ActionMethod
     increment() {
@@ -170,17 +171,12 @@ class User extends LoadingModel {
     @ActionType('fetchUser') fetchUserType
     @ActionMethod
     fetchUser() {
-        this.loading = true
-    }
-
-    @ActionType('userFetched') userFetchedType
-    @ActionMethod
-    userFetched() {
-        this.loading = false
+        this.setLoading( true )
     }
 
     @ActionMethod
-    setUser(name) {
+    userFetched( user ) {
+        this.setLoading( false )
         this.user = name
     }
 
@@ -190,8 +186,7 @@ class User extends LoadingModel {
             ofType(this.fetchUserType),
             mergeMap( () => from(userAPI()) )
             map(user => {
-                action$.next(this.userFetched())
-                return this.setUser(user)
+                return this.userFetched(user)
             })
         )
     }
