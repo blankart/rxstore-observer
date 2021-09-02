@@ -21,7 +21,8 @@
     "removeComments": true,
     "noEmit": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "node_modules"
