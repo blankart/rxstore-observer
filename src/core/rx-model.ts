@@ -60,7 +60,7 @@ export const Injectable: ClassDecorator = target => {
 }
 
 /** @internal */
-export class Model<
+export class RxModel<
     S extends Record<string, any>,
     A extends Record<string, ( ...args: any ) => void>,
     I extends new ( ...args: any ) => any = new ( ...args: any ) => any

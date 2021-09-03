@@ -1,7 +1,7 @@
 import ofType from '../of-type'
 import { map, mapTo } from 'rxjs/operators'
 import { ActionMethods, State as IState } from '../../templates/mock-store'
-import { Injectable, Model, ActionMethod, ActionType, State, Effect } from '../rx-model'
+import { Injectable, RxModel, ActionMethod, ActionType, State, Effect } from '../rx-model'
 import { Observable, Subject } from 'rxjs'
 import { RxModelActionOf, RxModelObservableActions } from 'src/types'
 import createRxStore from '../create-rx-store'
@@ -30,7 +30,7 @@ describe( 'Store', () => {
             }
         }
 
-        const { actions, reducer } = new Model<IState, ActionMethods>( DummyStoreInstance )
+        const { actions, reducer } = new RxModel<IState, ActionMethods>( DummyStoreInstance )
         const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState() ).toEqual( { dummyField1: '', dummyField2: '', dummyField3: '' } )
         dummyStore.dispatch( actions.changeDummyField1( 'Changed value' ) )
@@ -93,7 +93,7 @@ describe( 'Store', () => {
             }
         }
 
-        const { reducer, actions, effects } = new Model( DummyStoreInstance )
+        const { reducer, actions, effects } = new RxModel( DummyStoreInstance )
         const dummyStore = createRxStore( reducer )
         dummyStore.addEffects( effects )
         dummyStore.dispatch( actions.changeDummyField1( 'Changed value' ) )
@@ -131,7 +131,7 @@ describe( 'Store', () => {
             }
         }
 
-        const { reducer, actions } = new Model<IState, ActionMethods>( DummyStoreInstance )
+        const { reducer, actions } = new RxModel<IState, ActionMethods>( DummyStoreInstance )
         const dummyStore = createRxStore( reducer )
         const mockFunction1 = jest.fn()
         const mockFunction2 = jest.fn()
@@ -212,7 +212,7 @@ describe( 'Store', () => {
             ) { super() }
         }
 
-        const { reducer, actions }  = new Model( Store3 )
+        const { reducer, actions }  = new RxModel( Store3 )
         const store = createRxStore( reducer )
         expect( store.getState() ).toEqual( { anotherState: 'fromStore3', fromNestedStore: true, fromAnotherNestedStore: true } )
         store.dispatch( actions.accessFromStore1() )
@@ -320,8 +320,8 @@ describe( 'Store', () => {
             constructor( protected store1Actions: Store1ActionsAndState ) { super() }
         }
 
-        const { reducer: store1, actions: storeActions1, effects: storeEffects1 } = new Model<IStore1State, IStore1>( Store1 )
-        const { reducer: store2, effects: storeEffects2 } = new Model<IStore2State, IStore2>( Store2 )
+        const { reducer: store1, actions: storeActions1, effects: storeEffects1 } = new RxModel<IStore1State, IStore1>( Store1 )
+        const { reducer: store2, effects: storeEffects2 } = new RxModel<IStore2State, IStore2>( Store2 )
         const store = createRxStore( combineReducers( { store1, store2 } ) )
         store.addEffects( [ ...storeEffects1, ...storeEffects2 ] )
         store.dispatch( storeActions1.changeStore1State( 'Changed value' ) )
@@ -369,7 +369,7 @@ describe( 'Store', () => {
             constructor( protected classInstance3: ClassInstance3, protected classInstance2: ClassInstance2 ) {}
         }
 
-        const { reducer, actions } = new Model( FinalInstance )
+        const { reducer, actions } = new RxModel( FinalInstance )
         const store = createRxStore( reducer )
         store.dispatch( actions.setDummyState() )
         expect( store.getState().dummyState ).toBe( 'Data accessed' )
