@@ -22,7 +22,7 @@ yarn add rxstore-observer
 
 ---
 
-```jsx
+```typescript
 import { createRxStore } from 'rxstore-observer'
 
 const initialState = {
@@ -51,10 +51,9 @@ store.dispatch( { type: 'INCREMENT' } )
 ```
 
 ## Using Decorators
-```jsx
-import { createRxStore, RxModel, ActionMethod, State, createModel } from 'rxstore-observer'
+```typescript
+import { createRxStore, RxModel, ActionMethod, State } from 'rxstore-observer'
 
-@RxModel
 class Counter {
     @State counter = 0
 
@@ -69,7 +68,7 @@ class Counter {
     }
 }
 
-const { reducer, initialState, actions } = createModel( Counter )
+const { reducer, initialState, actions } = new RxModel( Counter )
 
 // Create a mew store instance using `createRxStore`
 const store = createRxStore( reducer, initialState )
@@ -84,8 +83,8 @@ store.dispatch( actions.increment() )
 ```
 
 ## Adding side effects
-```jsx
-import { createRxStore, RxModel, ActionMethod, State, createModel, ofType, Observer, ActionType } from 'rxstore-observer'
+```typescript
+import { createRxStore, RxModel, ActionMethod, State, ofType, Effect, ActionType } from 'rxstore-observer'
 import { debounceTime, mapTo, tap } from 'rxjs/operators'
 
 @RxModel
@@ -112,11 +111,18 @@ class Counter {
     }
 
     // Using RxJS Observables!
-    @Observer
-    watchCounter( action$ ) {
+    @Effect
+    watchCounter1( action$ ) {
+        return action$.pipe(
+            ofType(this.incrementType, this.decrementType),
+            mapTo(() => this.setDone(false))
+        )
+    }
+
+    @Effect
+    watchCounter2( action$ ) {
         return action$.pipe( 
             ofType(this.incrementType, this.decrementType),
-            tap(() => action$.next(this.setDone(false))),
             debounceTime(1000),
             mapTo(this.setDone(true))
         )
@@ -124,11 +130,11 @@ class Counter {
 
 }
 
-const { reducer, initialState, actions, observers } = createModel( Counter )
+const { reducer, initialState, actions, effects } = new RxModel( Counter )
 
 // Create a mew store instance using `createRxStore`
 const store = createRxStore( reducer, initialState )
-store.addObservers( observers )
+store.addEffects( effects )
 store.subscribe( (action) => {
     // Subscribing to any state changes inside your store continer.
     console.log( 'ACTION DISPATCHED: ', action )
@@ -148,47 +154,4 @@ CURRENT STATE: { counter: 1, done: false }
 // After 1000ms
 ACTION DISPATCHED: { type: 'Counter/setDone', payload: true }
 CURRENT STATE: { counter: 1, done: true }
-```
-
-
-## Shared Models
-```ts
-import { createRxStore, RxModel, ActionMethod, State, createModel, ofType, Observer, ActionType, Signal } from 'rxstore-observer'
-
-class LoadingModel {
-    @State loading = false
-
-    @ActionMethod
-    setLoading( value ) {
-        this.loading = value
-    }
-}
-
-@RxModel
-class User extends LoadingModel {
-    @State user = undefined
-
-    @ActionType('fetchUser') fetchUserType
-    @ActionMethod
-    fetchUser() {
-        this.setLoading( true )
-    }
-
-    @ActionMethod
-    userFetched( user ) {
-        this.setLoading( false )
-        this.user = name
-    }
-
-    @Observer
-    fetchObserver( action$ ) {
-        return action$.pipe(
-            ofType(this.fetchUserType),
-            mergeMap( () => from(userAPI()) )
-            map(user => {
-                return this.userFetched(user)
-            })
-        )
-    }
-}
 ```

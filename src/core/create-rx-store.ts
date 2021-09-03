@@ -1,12 +1,12 @@
-import { BehaviorSubject, merge, ReplaySubject, Subject } from 'rxjs'
+import { BehaviorSubject, merge, ReplaySubject, Subject, from } from 'rxjs'
 import { 
     RxStore, 
-    ObserverFunction, 
+    EffectFunction, 
     SubscribeFunction, 
     Action, 
     RxReducer,  
     RxStoreEnhancer,
-    RxObserverOrObserverClass,
+    RxEffectOrEffectClass,
 } from '../types'
 import { mergeMap } from 'rxjs/operators'
 
@@ -16,7 +16,7 @@ import { mergeMap } from 'rxjs/operators'
  * @param {RxReducer<S, T>} rootReducer 
  * @param {S} initialState
  * 
- * @return {RxStore<S, T, SubscribeFunction, ObserverFunction>} generated store
+ * @return {RxStore<S, T, SubscribeFunction, EffectFunction>} generated store
  */
 const createRxStore = <
     S extends Record<string, any>,
@@ -27,7 +27,7 @@ const createRxStore = <
     enhancer?: RxStoreEnhancer<S, T>
 ): RxStore<S, T> => {
     if ( typeof rootReducer !== 'function' ) {
-        throw new Error( 'Invalid reducer parameter. Reducer must be of type `function`.' )
+        throw new Error( `Invalid reducer parameter. Reducer must be of type \`function\`. But found: \`${ rootReducer }\`` )
     }
 
     if ( enhancer && ( typeof enhancer !== 'function' ) ) {
@@ -78,15 +78,15 @@ const createRxStore = <
         return () => subscription.unsubscribe() 
     }
 
-    const _observer$ = new ReplaySubject<ObserverFunction<S, T>>( 1 )
-    const _observers$ = new BehaviorSubject<Array<ObserverFunction<S, T>>>( [] )
+    const _effect$ = new ReplaySubject<EffectFunction<S, T>>( 1 )
+    const _effects$ = new BehaviorSubject<Array<EffectFunction<S, T>>>( [] )
 
     /**
-     * Observers factory derived from merging
-     * all observers from `addObserver` and `addObservers`
+     * Effects factory derived from merging
+     * all effects from `addEffect` and `addEffects`
      */
-    const observers$ = _observer$.pipe(
-        mergeMap( observer => merge( observer( action$, state$ ), ..._observers$.value.map( o => o( action$, state$ ) ) ) )
+    const effects$ = _effect$.pipe(
+        mergeMap( effect => merge( effect( from( action$ ), from( state$ ) ), ..._effects$.value.map( o => o( from( action$ ), from( state$ ) ) ) ) )
     )
 
     /**
@@ -94,35 +94,35 @@ const createRxStore = <
      * Actions from the observable streams will be
      * passed to the original action$ stream.
      */
-    observers$.subscribe(
+    effects$.subscribe(
         next => action$.next( next )
     )
 
-    const addObserver = <
+    const addEffect = <
         U extends Action, 
         V extends Action = Extract<T, U>
-    >( observerFunction: ObserverFunction<S, T, V> ) => { 
-        if ( typeof observerFunction === 'function' ) {
-            _observer$.next( observerFunction as unknown as ObserverFunction<S, T> )
+    >( effectFunction: EffectFunction<S, T, V> ) => { 
+        if ( typeof effectFunction === 'function' ) {
+            _effect$.next( effectFunction as unknown as EffectFunction<S, T> )
             return
         }
-        throw new Error( `Invalid observer passed. Expected an observer function instance. But received: ${ observerFunction }` )
+        throw new Error( `Invalid effect passed. Expected an effect function instance. But received: ${ effectFunction }` )
     }
 
-    const addObservers = ( newObservers: Array<RxObserverOrObserverClass<S,T>> ) => {
-        newObservers.forEach( ( observer: RxObserverOrObserverClass<S, T> ) => {
-            if ( typeof observer === 'function' ) {
-                _observer$.next( observer )
+    const addEffects = ( newEffects: Array<RxEffectOrEffectClass<S,T>> ) => {
+        newEffects.forEach( ( effect: RxEffectOrEffectClass<S, T> ) => {
+            if ( typeof effect === 'function' ) {
+                _effect$.next( effect )
                 return
             }
 
-            throw new Error( `Invalid observer passed. Expected an observer function instance. But received: ${ observer }` )
+            throw new Error( `Invalid effect passed. Expected an effect function instance. But received: ${ effect }` )
         } )
     }
 
     const dispatch = ( newAction: T ) => action$.next( newAction )
 
-    return { getState, subscribe, dispatch, addObserver, addObservers }
+    return { getState, subscribe, dispatch, addEffect, addEffects }
 }
 
 export default createRxStore

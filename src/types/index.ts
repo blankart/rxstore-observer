@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, Subject } from 'rxjs'
+import { Observable } from 'rxjs'
 
 export interface RxStoreCreator<
     S extends Record<string, any>,
@@ -41,40 +41,40 @@ export interface RxStore<
      */
     dispatch: ( action: T ) => any
     /**
-     * Observers are the sagas of Rxjs Store. It subscribes to a single action type
+     * Effects are the sagas of Rxjs Store. It subscribes to a single action type
      * to do side-effects using pipe and Rxjs operators.
      * ```
      * import { mapTo } from 'rxjs/operators'
      * import { ofType } from 'rxstore-observer'
-     * store.addObserver( action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
+     * store.addEffect( action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }) ) );
      * ```
-     * @param {W} observerFunction callback function.
+     * @param {W} effectFunction callback function.
      * 
      */
-    addObserver: <V extends Action>( observerFunction: ObserverFunction<S, T, V> ) => void
+    addEffect: <V extends Action>( effectFunction: EffectFunction<S, T, V> ) => void
     /**
-     * Used to include all observers at once instead of calling 
-     * `addObserver` repeatedly. Added observers must be of type `RxObserver<Action>`.
+     * Used to include all effects at once instead of calling 
+     * `addEffect` repeatedly. Added effects must be of type `RxEffect<Action>`.
      * ```
      * import { ofType } from 'rxstore-observer'
-     * const doSomethingObserver = action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }));
-     * const doStuffObserver = action$ => action$.pipe( ofType('DO_STUFF'), mapTo({ type: 'THEN_DO_THAT' }));
+     * const doSomethingEffect = action$ => action$.pipe( ofType('DO_SOMETHING'), mapTo({ type: 'THEN_DO_THIS' }));
+     * const doStuffEffect = action$ => action$.pipe( ofType('DO_STUFF'), mapTo({ type: 'THEN_DO_THAT' }));
      * 
-     * store.addObservers([
-     * doSomethingObserver,
-     * doStuffObserver
+     * store.addEffects([
+     * doSomethingEffect,
+     * doStuffEffect
      * ])
      * ```
      */
-    addObservers: ( newObservers: Array<RxObserverOrObserverClass<S, T>> ) => any
+    addEffects: ( newEffects: Array<RxEffectOrEffectClass<S, T>> ) => any
 }
 
-export interface ObserverFunction<
+export interface EffectFunction<
     S extends Record<string, any>,
     T extends Action,
     V extends Action = T,
 > {
-    ( action$: Subject<T>, state$: BehaviorSubject<S> ): Observable<V>
+    ( action$: Observable<T>, state$: Observable<S> ): Observable<V>
 } 
 
 export interface SubscribeFunction<T extends Action> { 
@@ -99,11 +99,11 @@ export interface RxStoreMiddleware<
 
 export type RxReducer<T, U> = ( state: T | undefined, action: U ) => T
 
-export type RxObserverOrObserverClass<
+export type RxEffectOrEffectClass<
     S extends Record<string, any>,
     T extends Action,
     U extends Action = T,
-> = ObserverFunction<S, T, U>  | any
+> = EffectFunction<S, T, U>  | any
 
 export interface RxDispatch<
     S extends Action
@@ -135,24 +135,3 @@ export type RxModelMappedActions<
 export type RxModelObservableActions<A extends Record<string, ( ...args: any[] ) => void>> = RxModelMappedActions<A>[ keyof A ]
 
 export type RxModelActionOf<A extends Record<string, ( ...args: any[] ) => void>, S extends keyof A> = RxModelMappedActions<A>[S]
-
-export interface RxModelDecorated<
-    S extends Record<string, any>,
-    A extends Record<string, ( ...args: any ) => void>
-> {
-    initialState: S,
-    actions: { [ K in keyof A ]: ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
-    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
-    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>
-}
-
-export interface PreprocessedRxModelPrototype<
-    S extends Record<string, any>,
-    A extends Record<string, ( ...args: any[] ) => void>
-> {
-    states: Array<keyof S>,
-    reducersMap: { [ K in keyof A ]: { key: K, fn: ( s: S ) => S } }[ keyof A ][]
-    actions: { [ K in keyof A ]: (s: string) => ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
-    actionTypes: Array<A['type']>
-    observers: Array<ObserverFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
-}

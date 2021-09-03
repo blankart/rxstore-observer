@@ -8,7 +8,7 @@ describe( 'createRxJsStore', () => {
         const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState ).toBeTruthy()
         expect( dummyStore.getState() ).toEqual( initialState )
-        expect( dummyStore.addObserver ).toBeTruthy()
+        expect( dummyStore.addEffect ).toBeTruthy()
         expect( dummyStore.subscribe ).toBeTruthy()
         expect( dummyStore.dispatch ).toBeTruthy()
     } )
@@ -64,14 +64,14 @@ describe( 'createRxJsStore', () => {
         expect( dummyStore.getState().dummyField3 ).toBe( 'Changed value 2' )
     } )
 
-    test( 'Store observers', () => {
+    test( 'Store effects', () => {
         const dummyStore = createRxStore( reducer )
-        dummyStore.addObserver<ChangeDummyField2Action>( action$ => action$.pipe(
+        dummyStore.addEffect<ChangeDummyField2Action>( action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( value => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( value as Action ).payload } ) )
         ) )
 
-        dummyStore.addObserver<ChangeDummyField3Action>( action$ => { 
+        dummyStore.addEffect<ChangeDummyField3Action>( action$ => { 
             return action$.pipe(
                 ofType( 'CHANGE_DUMMY_FIELD_1' ),
                 map( action => { 

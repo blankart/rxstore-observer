@@ -1,4 +1,11 @@
-import { RxReducer, Action, PreprocessedRxModelPrototype, RxModelDecorated } from '../types'
+import { RxReducer, Action, EffectFunction, ActionWithPayload } from '../types'
+
+const RXSTORE_INJECTED_METAKEY = '__@@rxstore/injected'
+const RXSTORE_ACTIONS_METAKEY = '__@@rxstore/actions'
+const RXSTORE_ACTIONTYPES_METAKEY = '__@@rxstore/actions'
+const RXSTORE_STATES_METAKEY = '__@@rxstore/states'
+const RXSTORE_REDUCERSMAP_METAKEY = '__@@rxstore/reducersMap'
+const RXSTORE_EFFECTS_METAKEY = '__@@rxstore/effects'
 
 /** @internal */
 const generateStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>> ): Partial<S> => {
@@ -12,12 +19,14 @@ const generateStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>>
 /** @internal */
 const generateReducerFunction = <S, T extends Action>( name: string, instance: new ( ...args: any ) => any, reducersMap: any[], initialState: S ) => {
     return ( state: S = initialState, action: T ): S => {
-        const reducersKeyMap: any = { ...instance }
+        let reducersKeyMap: any = { ...instance }
         const switchReducerKeysMap: any = {}
         reducersMap.forEach( reducerMap => {
             reducersKeyMap[ reducerMap.key ] = reducerMap.fn
-            switchReducerKeysMap[ name + '/' + reducerMap.key ] = reducerMap.fn
+            switchReducerKeysMap[ reducerMap.type ] = reducerMap.fn
         } )
+
+        reducersKeyMap = Object.assign( reducersKeyMap, state )
 
         if ( switchReducerKeysMap[ action.type as T['type'] ] ) {
             switchReducerKeysMap[ action.type as T['type'] ].bind( Object.assign( reducersKeyMap, state ) )( ...action.payload )
@@ -33,7 +42,7 @@ const generateReducerFunction = <S, T extends Action>( name: string, instance: n
 /** @internal */
 const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,]*))/mg
 const ARGUMENT_NAMES = /([^\s,]+)/g
-function getParamNames( func: ( ...args: any ) => any ): Array<any> {
+function getParamNames( func: any ): Array<any> {
     const fnStr = func.toString().replace( STRIP_COMMENTS, '' )
     let result = fnStr.slice( fnStr.indexOf( '(' ) + 1, fnStr.indexOf( ')' ) ).match( ARGUMENT_NAMES )
     if( result === null )
@@ -41,107 +50,134 @@ function getParamNames( func: ( ...args: any ) => any ): Array<any> {
     return result
 }
 
-export const RxModel = <
-    S extends Record<string, any>,
-    T extends Action,
->( target: new ( ...args: any ) => any ): new ( ...args: any ) => any => {
-    const { name } = target
-    const injectedObject: any = {}
-    const parametersNames = getParamNames( target.prototype.constructor )
-    const metadata =  Reflect.getMetadata<typeof target>( 'design:paramtypes', target ) as unknown as any[] || [] 
-    /** @internal model factory */
-    metadata
-        .forEach( ( v, i ) => {
-            const propertyTypes: any = {}
-            Object.getOwnPropertyNames( v.prototype ).forEach( value => {
-                if ( value === 'constructor' ) {
-                    return
-                }
-                propertyTypes[ value ] = v.prototype[ value ]
-            } )
-            injectedObject[ parametersNames[ i ] ] = propertyTypes
-        } ) 
-    
-    const __proto__: PreprocessedRxModelPrototype<S, T> = target.prototype
-    const targetInstance = new target()
-    Object.getOwnPropertyNames( __proto__ ).forEach( value => {
-        if ( [ 'states', 'actions', 'reducersMap', 'constructor' ].includes( value ) ) {
-            return
-        }
-        injectedObject[ value ] = __proto__[ value as keyof typeof __proto__ ]
+export const Injectable: ClassDecorator = target => { 
+    const paramTypes: any = Reflect.getMetadata( 'design:paramtypes', target ) || []
+    const parametersNames = getParamNames( target )
+    parametersNames.forEach( ( paramName, idx ) => {
+        target.prototype[ paramName as keyof typeof target ] = paramTypes[ idx as keyof typeof paramTypes ].prototype
     } )
-    const states = __proto__.states || []
-    const reducersMap = [ ...( __proto__.reducersMap || [] ) ]
-    const initialState = generateStateObject( targetInstance, states ) as S
-    const reducer = generateReducerFunction( name, injectedObject, reducersMap, initialState )
+    Reflect.defineMetadata( RXSTORE_INJECTED_METAKEY, paramTypes, target )
+}
 
-    return class RxModelInstance {
-        initialState: S = initialState
-        reducer: RxReducer<S, T> = reducer as unknown as RxReducer<S, T>
-        actions = Object.keys( __proto__.actions || {} ).reduce( ( acc, curr ) => ( { ...acc, [ curr ]: __proto__.actions[ curr ]( name ) } ) , {} )
-        actionTypes = ( Object.keys( __proto__.actionTypes || {} ) ).reduce( ( acc, curr ) => ( { ...acc, [ curr ]: name + '/' + __proto__.actionTypes[ curr as keyof typeof __proto__.actionTypes ] } ), {} )
-        observers = ( __proto__.observers || [] ).map( v => v.bind( { 
+/** @internal */
+export class Model<
+    S extends Record<string, any>,
+    A extends Record<string, ( ...args: any ) => void>,
+    I extends new ( ...args: any ) => any = new ( ...args: any ) => any
+> {
+    initialState: S
+    actions: { [ K in keyof A ]: ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
+    effects: Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
+    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>
+
+    constructor( ClassInstance: I ) {
+        const { name } = ClassInstance
+        const injectedObject: any = {}
+        const parametersNames = getParamNames( ClassInstance.prototype.constructor )
+        const metadata =  Reflect.getMetadata<typeof ClassInstance>( RXSTORE_INJECTED_METAKEY, ClassInstance ) as unknown as any[] || [] 
+        if ( parametersNames.length && metadata.length === 0 ) {
+            throw new Error( `\`${ name }\` class must be injectable to access \`${ parametersNames.join( ', ' ) }\`. Make the class injectable by adding the @Injectable decorator.` )
+        }
+        /** @internal model factory */
+        metadata
+            .forEach( ( v, i ) => {
+                const propertyTypes: any = {}
+                const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, v.prototype ) || {} ) as any
+                const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, v.prototype ) || [] ) as []
+                Object.getOwnPropertyNames( v.prototype ).forEach( value => {
+                    if ( value === 'constructor' ) {
+                        return
+                    }
+                    propertyTypes[ value ] = v.prototype[ value ]
+                } )
+                injectedObject[ parametersNames[ i ] ] = {
+                    ...propertyTypes,
+                    ...actions,
+                    ...actionTypes
+                }
+            } ) 
+    
+        const __proto__ = ClassInstance.prototype
+        const targetInstance = new ClassInstance()
+        Object.getOwnPropertyNames( __proto__ ).forEach( value => {
+            if ( value === 'constructor' ) {
+                return
+            }
+            injectedObject[ value ] = __proto__[ value as keyof typeof __proto__ ]
+        } )
+        const states = ( Reflect.getMetadata( RXSTORE_STATES_METAKEY, ClassInstance.prototype ) || [] ) as []
+        const reducersMap = ( Reflect.getMetadata( RXSTORE_REDUCERSMAP_METAKEY, ClassInstance.prototype ) || [] ) as []
+        const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, ClassInstance.prototype ) || {} ) as any
+        const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, ClassInstance.prototype ) || [] ) as []
+        const effects = ( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, ClassInstance.prototype ) || [] ) as Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
+        const initialState = generateStateObject( targetInstance, states ) as S
+        const reducer = generateReducerFunction( name, injectedObject, reducersMap, initialState )
+
+        this.initialState = initialState
+        this.reducer = reducer
+        this.actions = actions
+        this.effects = effects.map( v => v.bind( { 
             ...injectedObject,
-            ...this.actions,
-            ...this.actionTypes
+            ...actions,
+            ...actionTypes
         } ) )
-    } as unknown as new () => RxModelDecorated<S, T> 
+    }
 }
 
 export const ActionMethod = <
     T extends Action
->( target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor ) => {
+>( target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<{ ( ...args: any ): void | undefined }> ) => {
+    let isPromise = false
     try {
-        descriptor.value.bind( {} )().then( () => {
-            throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function.` )
-        } ).catch( () => {
-            throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function.` )
-        } )
+        /**
+         * Don't allow promise based actions since reducers are designed to be
+         * synchronous.
+         */
+        isPromise = ( descriptor.value as any ).bind( {} )() instanceof Promise
     } catch { /** */}
 
-    target.actions = {
-        ...( target.actions || {} ),
-        [ propertyKey ]: ( className: string ) => ( ...payload: T['payload'] ) => ( {
-            type: className + '/' + propertyKey.toString(),
+    if ( isPromise ) {
+        throw new Error( `Action methods from \`${ target.constructor.name }\`: \`${ propertyKey.toString() }\` must be a synchronous function.` )
+    }
+
+    Reflect.defineMetadata( RXSTORE_ACTIONS_METAKEY, {
+        ...( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, target ) || {} as any ),
+        [ propertyKey ]: ( ...payload: T['payload'] ) => ( {
+            type: `[${ target.constructor.name }] ${ propertyKey.toString() }`,
             payload
         } )
-    }
-    target.reducersMap = [
-        ...( target.reducersMap || [] ),
+    }, target )
+
+    Reflect.defineMetadata( RXSTORE_REDUCERSMAP_METAKEY, [
+        ...( Reflect.getMetadata( RXSTORE_REDUCERSMAP_METAKEY, target ) || [] as any ),
         {
+            type: `[${ target.constructor.name }] ${ propertyKey.toString() }`,
             key: propertyKey.toString(),
             fn: descriptor.value
         }
-    ]
+    ], target )
 }
 
-export const Observer = ( target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor ) => {
-    target.observers = [
-        ...( target.observers || []  ),
+export const Effect = ( target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor ) => {
+    Reflect.defineMetadata( RXSTORE_EFFECTS_METAKEY, [
+        ...( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, target ) || [] as any ),
         descriptor.value
-    ]
+    ], target )
 }
 
 export const State = ( target: any, propertyKey: any ) => {
-    target.states = [
-        ...( target.states || [] ),
+    Reflect.defineMetadata( RXSTORE_STATES_METAKEY, [
+        ...( Reflect.getMetadata( RXSTORE_STATES_METAKEY, target ) || [] as any ),
         propertyKey
-    ]
-}
-
-export const createModel = <
-    S extends Record<string, any>,
-    A extends Record<string, ( ...args: any[] ) => void>,
->( Instance: new ( ...args: any ) => any ): RxModelDecorated<S, A> => {
-    const modelInstance = new Instance()
-    return modelInstance
+    ], target )
 }
 
 export const ActionType = ( method: string ) => {
     return ( target: any, propertyKey: string | symbol  ) => {
-        target.actionTypes =  {
-            ...( target.actionTypes || {} ),
-            [ propertyKey.toString() ]: method
-        }
+        target[ propertyKey.toString() ] = `[${ target.constructor.name }] ${ method }`
+        Reflect.defineMetadata( RXSTORE_ACTIONTYPES_METAKEY, {
+            ...( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, target ) || {} as any ),
+            [ propertyKey.toString() ]: `[${ target.constructor.name }] ${ method }`
+        }, target )
     }
 }

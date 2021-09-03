@@ -9,12 +9,12 @@ import { Action } from '../types'
  * 
  * @example
  * ```
- * const observer = action$ => action$.pipe(
+ * const effect = action$ => action$.pipe(
  *  ofType( 'PING' ),
  *  mapTo( 'PONG' )
  * )
  * 
- * store.addObservers( [ observer ] )
+ * store.addEffects( [ effect ] )
  * ```
  * 
  * @param {[ T, ...T[] ]} types 
