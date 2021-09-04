@@ -154,3 +154,52 @@ CURRENT STATE: { counter: 1, done: false }
 ACTION DISPATCHED: { type: 'Counter/setDone', payload: true }
 CURRENT STATE: { counter: 1, done: true }
 ```
+
+---
+## Injectable Services
+```typescript
+import { State, ActionMethod, Injectable, Effect, ofType } from 'rxstore-observer'
+import { fromPromise, of } from 'rxjs'
+import { mapTo, mergeMap } from 'rxjs/operators'
+
+class UserService {
+    fetchUsers() {
+        return fromPromise(await fetch(<USERS_API_HERE>))
+    }
+}
+
+@Injectable
+class UserStore {
+    @State loading = false
+    @State users = []
+
+    @ActionType('fetchUsers') fetchUsersType
+
+    @ActionMethod fetchUsers() {}
+    @ActionMethod setUsers(users) { this.users = users }
+    @ActionMethod setLoading(toggle) { this.loading = toggle }
+
+    @Effect toggleLoading (action$) {
+        return action$.pipe(
+            ofType(this.fetchUsersType),
+            mapTo(this.setLoading(true))
+        )
+    }
+
+    @Effect fetchUsersEffect(action$) {
+        return action$.pipe(
+            ofType(this.fetchUsersType),
+            mergeMap(() => this.userService.fetchUsers().pipe(
+                mergeMap(users => of(
+                    this.setUsers(users),
+                    this.setLoading(false)
+                ))
+            )),
+        )
+    }
+
+    constructor(
+        protected userService: UserService
+    ) {}
+}
+```

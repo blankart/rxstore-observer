@@ -8,7 +8,7 @@ const RXSTORE_REDUCERSMAP_METAKEY = '__@@rxstore/reducersMap'
 const RXSTORE_EFFECTS_METAKEY = '__@@rxstore/effects'
 
 /** @internal */
-const generateStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>> ): Partial<S> => {
+const __genStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>> ): Partial<S> => {
     return ( keys || [] ).reduce( ( acc, curr ) => {
         return Object.prototype.hasOwnProperty.call( classInstance, curr ) ?
             { ...acc, [ curr ]: classInstance[ curr ] } :
@@ -17,7 +17,7 @@ const generateStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>>
 }
 
 /** @internal */
-const generateReducerFunction = <S, T extends Action>( name: string, instance: new ( ...args: any ) => any, reducersMap: any[], initialState: S ) => {
+const __genReducer = <S, T extends Action>( name: string, instance: new ( ...args: any ) => any, reducersMap: any[], initialState: S ) => {
     return ( state: S = initialState, action: T ): S => {
         let reducersKeyMap: any = { ...instance }
         const switchReducerKeysMap: any = {}
@@ -54,6 +54,9 @@ export const Injectable: ClassDecorator = target => {
     const paramTypes: any = Reflect.getMetadata( 'design:paramtypes', target ) || []
     const parametersNames = getParamNames( target )
     parametersNames.forEach( ( paramName, idx ) => {
+        if ( !  Reflect.getMetadata( RXSTORE_INJECTED_METAKEY, paramTypes[ idx ] ) ) {
+            throw new Error( `'${ paramTypes[ idx ].name }' is not an injectable class. Add @Injectable to expose the class's prototype` )
+        }
         target.prototype[ paramName as keyof typeof target ] = paramTypes[ idx as keyof typeof paramTypes ].prototype
     } )
     Reflect.defineMetadata( RXSTORE_INJECTED_METAKEY, paramTypes, target )
@@ -110,8 +113,8 @@ export class RxModel<
         const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, ClassInstance.prototype ) || {} ) as any
         const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, ClassInstance.prototype ) || [] ) as []
         const effects = ( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, ClassInstance.prototype ) || [] ) as Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
-        const initialState = generateStateObject( targetInstance, states ) as S
-        const reducer = generateReducerFunction( name, injectedObject, reducersMap, initialState )
+        const initialState = __genStateObject( targetInstance, states ) as S
+        const reducer = __genReducer( name, injectedObject, reducersMap, initialState )
 
         this.initialState = initialState
         this.reducer = reducer

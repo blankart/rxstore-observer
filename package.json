@@ -26,6 +26,7 @@
     "dev": "nodemon",
     "dev:ts": "tsc -w",
     "test": "NODE_OPTIONS=\"--unhandled-rejections=warn\" jest --no-cache",
+    "test:watch": "jest --no-cache --watchAll",
     "lint": "eslint src/**/*.ts",
     "build": "rollup -c",
     "build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir types",
