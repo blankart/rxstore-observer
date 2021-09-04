@@ -234,9 +234,13 @@ describe( 'Store', () => {
         const Test2 = () => {
             ActionMethod( this, 'test', { value: async function() { throw new Error( 'Error' ) } } as any )
         }
+        const Test3 = () => {
+            ActionMethod( this, 'test', { value: function() { return new Promise( resolve => resolve( 'any' ) ) } } as any )
+        }
 
         expect( Test ).toThrowError()
         expect( Test2 ).toThrowError()
+        expect( Test3 ).toThrowError()
     } )
 
     test( 'Shared action types and dispatchers from multiple Store instances', () => {

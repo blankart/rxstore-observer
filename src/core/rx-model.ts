@@ -133,7 +133,7 @@ export const ActionMethod = <
          * Don't allow promise based actions since reducers are designed to be
          * synchronous.
          */
-        isPromise = ( descriptor.value as any ).bind( {} )() instanceof Promise
+        isPromise = ( new RegExp( [ "AsyncFunction", "Promise" ].join( '|' ) ) ).test( Function.prototype.toString.call( descriptor.value ) )  || ( !! descriptor.value && descriptor.value.bind( {} )() as any instanceof Promise )
     } catch { /** */}
 
     if ( isPromise ) {
