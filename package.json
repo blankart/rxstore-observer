@@ -1,6 +1,6 @@
 {
   "name": "rxstore-observer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "React state management tool using RxJS",
   "repository": "blankart/rxstore-observer",
   "main": "lib/rxstore-observer.js",
