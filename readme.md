@@ -162,6 +162,7 @@ import { State, ActionMethod, Injectable, Effect, ofType } from 'rxstore-observe
 import { fromPromise, of } from 'rxjs'
 import { mapTo, mergeMap } from 'rxjs/operators'
 
+@Injectable
 class UserService {
     fetchUsers() {
         return fromPromise(await fetch(<USERS_API_HERE>))
