@@ -20,37 +20,6 @@ yarn add rxstore-observer
 
 ## Usage Sample
 
----
-
-```typescript
-import { createRxStore } from 'rxstore-observer'
-
-const initialState = {
-    counter: 0
-}
-
-const reducer = (state = initialState, action ) => {
-    switch (action.type) {
-        case 'INCREMENT': return { ...state, counter: state.counter + 1 }
-        case 'DECREMENT': return { ...state, counter: state.counter - 1 }
-        default: return state
-    }
-}
-
-// Create a mew store instance using `createRxStore`
-const store = createRxStore( reducer )
-
-store.subscribe( (action) => {
-    // Subscribing to any state changes inside your store continer.
-    console.log( 'ACTION DISPATCHED: ', action )
-    console.log( 'CURRENT STATE: ', store.getState() ) 
-} )
-
-// Used for dispatching an action to the store.
-store.dispatch( { type: 'INCREMENT' } )
-```
-
-## Using Decorators
 ```typescript
 import { createRxStore, RxModel, ActionMethod, State } from 'rxstore-observer'
 
@@ -82,6 +51,38 @@ store.subscribe( (action) => {
 store.dispatch( actions.increment() )
 ```
 
+---
+## Using Redux Patterns
+
+```typescript
+import { createRxStore } from 'rxstore-observer'
+
+const initialState = {
+    counter: 0
+}
+
+const reducer = (state = initialState, action ) => {
+    switch (action.type) {
+        case 'INCREMENT': return { ...state, counter: state.counter + 1 }
+        case 'DECREMENT': return { ...state, counter: state.counter - 1 }
+        default: return state
+    }
+}
+
+// Create a mew store instance using `createRxStore`
+const store = createRxStore( reducer )
+
+store.subscribe( (action) => {
+    // Subscribing to any state changes inside your store continer.
+    console.log( 'ACTION DISPATCHED: ', action )
+    console.log( 'CURRENT STATE: ', store.getState() ) 
+} )
+
+// Used for dispatching an action to the store.
+store.dispatch( { type: 'INCREMENT' } )
+```
+
+
 ## Adding side effects
 ```typescript
 import { createRxStore, RxModel, ActionMethod, State, ofType, Effect, ActionType } from 'rxstore-observer'
@@ -111,16 +112,14 @@ class Counter {
     }
 
     // Using RxJS Observables!
-    @Effect
-    watchCounter1( action$ ) {
+    @Effect watchCounter1( action$ ) {
         return action$.pipe(
             ofType(this.incrementType, this.decrementType),
             mapTo(() => this.setDone(false))
         )
     }
 
-    @Effect
-    watchCounter2( action$ ) {
+    @Effect watchCounter2( action$ ) {
         return action$.pipe( 
             ofType(this.incrementType, this.decrementType),
             debounceTime(1000),

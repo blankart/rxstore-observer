@@ -25,7 +25,7 @@
     "clean:types": "rimraf types",
     "dev": "nodemon",
     "dev:ts": "tsc -w",
-    "test": "jest --no-cache",
+    "test": "NODE_OPTIONS=\"--unhandled-rejections=warn\" jest --no-cache",
     "lint": "eslint src/**/*.ts",
     "build": "rollup -c",
     "build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir types",
