@@ -1,8 +1,8 @@
 import ofType from '../of-type'
-import { map, mapTo } from 'rxjs/operators'
+import { map, mapTo, mergeMap } from 'rxjs/operators'
 import { ActionMethods, State as IState } from '../../templates/mock-store'
 import { Injectable, RxModel, ActionMethod, ActionType, State, Effect } from '../rx-model'
-import { Observable, Subject } from 'rxjs'
+import { Observable, of, Subject } from 'rxjs'
 import { RxModelActionOf, RxModelObservableActions } from 'src/types'
 import createRxStore from '../create-rx-store'
 import combineReducers from '../combine-reducers'
@@ -14,20 +14,9 @@ describe( 'Store', () => {
             @State dummyField2 = ''
             @State dummyField3 = ''
 
-            @ActionMethod
-            changeDummyField1( value: string ) {
-                this.dummyField1 = value
-            }
-
-            @ActionMethod
-            changeDummyField2( value: string ) {
-                this.dummyField2 = value
-            }
-
-            @ActionMethod
-            changeDummyField3( value: string ) {
-                this.dummyField3 = value
-            }
+            @ActionMethod changeDummyField1( value: string ) { this.dummyField1 = value }
+            @ActionMethod changeDummyField2( value: string ) { this.dummyField2 = value }
+            @ActionMethod changeDummyField3( value: string ) { this.dummyField3 = value }
         }
 
         const { actions, reducer } = new RxModel<IState, ActionMethods>( DummyStoreInstance )
@@ -50,42 +39,27 @@ describe( 'Store', () => {
         class DummyStore1Instance {
             @State dummyField3 = ''
 
-            @ActionType( 'changeDummyField3' )
-            changeDummyField3ActionType: RxModelActionOf<ActionMethods, 'changeDummyField3'>['type']
-            @ActionMethod
-            changeDummyField3( value: string ) {
-                this.dummyField3 = value
-            }
+            @ActionType( 'changeDummyField3' ) changeDummyField3ActionType: RxModelActionOf<ActionMethods, 'changeDummyField3'>['type']
+            @ActionMethod changeDummyField3( value: string ) { this.dummyField3 = value }
         }
 
         class DummyStoreInstance extends DummyStore1Instance {
             @State dummyField1 = ''
             @State dummyField2 = ''
 
-            @ActionType( 'changeDummyField1' )
-            changeDummyField1ActionType: RxModelActionOf<ActionMethods, 'changeDummyField1'>['type']
-            @ActionMethod
-            changeDummyField1( value: string ) {
-                this.dummyField1 = value
-            }
+            @ActionType( 'changeDummyField1' ) changeDummyField1ActionType: RxModelActionOf<ActionMethods, 'changeDummyField1'>['type']
+            @ActionType( 'changeDummyField2' ) changeDummyField2ActionType: RxModelActionOf<ActionMethods, 'changeDummyField2'>['type']
+            @ActionMethod changeDummyField1( value: string ) { this.dummyField1 = value }
+            @ActionMethod changeDummyField2( value: string ) { this.dummyField2 = value }
 
-            @ActionType( 'changeDummyField2' )
-            changeDummyField2ActionType: RxModelActionOf<ActionMethods, 'changeDummyField2'>['type']
-            @ActionMethod
-            changeDummyField2( value: string ) {
-                this.dummyField2 = value
-            }
-
-            @Effect
-            watchDummyField1( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
+            @Effect watchDummyField1( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
                 return action$.pipe( 
                     ofType<RxModelActionOf<ActionMethods, 'changeDummyField1'>>( this.changeDummyField1ActionType ),
                     map( action => this.changeDummyField2( ...action.payload ) )
                 )
             }
 
-            @Effect
-            watchDummyField1_2( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
+            @Effect watchDummyField1_2( action$: Subject<RxModelObservableActions<ActionMethods>> ) {
                 return action$.pipe(
                     ofType<RxModelActionOf<ActionMethods, 'changeDummyField1'>>( this.changeDummyField1ActionType ),
                     map( action => this.changeDummyField3( ...action.payload ) )
@@ -120,15 +94,8 @@ describe( 'Store', () => {
             @State dummyField2 = ''
             @State dummyField3 = ''
 
-            @ActionMethod
-            changeDummyField1( value: string ) {
-                this.dummyField1 = value
-            }
-
-            @ActionMethod
-            changeDummyField2( value: string ) {
-                this.dummyField2 = value
-            }
+            @ActionMethod changeDummyField1( value: string ) { this.dummyField1 = value }
+            @ActionMethod changeDummyField2( value: string ) { this.dummyField2 = value }
         }
 
         const { reducer, actions } = new RxModel<IState, ActionMethods>( DummyStoreInstance )
@@ -171,27 +138,23 @@ describe( 'Store', () => {
         class NestedStore {
             @State fromNestedStore = true
 
-            @ActionMethod
-            changeNestedStoreToFalse() {
-                this.fromNestedStore = false
-            }
+            @ActionMethod changeNestedStoreToFalse() { this.fromNestedStore = false }
         }
 
         class AnotherNestedStore extends NestedStore {
             @State fromAnotherNestedStore = true
 
-            @ActionMethod
-            changeFromAnotherNestedStoreToFalse() {
-                this.fromAnotherNestedStore = false
-            }
+            @ActionMethod changeFromAnotherNestedStoreToFalse() { this.fromAnotherNestedStore = false }
         }
 
+        @Injectable
         class Store1 {
             @State fromStore1 = 'fromStoreOne'
             @ActionType( 'anActionType' ) anActionType = 'anActionType'
             exposedMethodFromStore1(): void { return }
         }
 
+        @Injectable
         class Store2 {
             exposedMethodFromStore2(): void { return }
         }
@@ -234,9 +197,13 @@ describe( 'Store', () => {
         const Test2 = () => {
             ActionMethod( this, 'test', { value: async function() { throw new Error( 'Error' ) } } as any )
         }
+        const Test3 = () => {
+            ActionMethod( this, 'test', { value: function() { return new Promise( resolve => resolve( 'any' ) ) } } as any )
+        }
 
         expect( Test ).toThrowError()
         expect( Test2 ).toThrowError()
+        expect( Test3 ).toThrowError()
     } )
 
     test( 'Shared action types and dispatchers from multiple Store instances', () => {
@@ -258,24 +225,19 @@ describe( 'Store', () => {
             store2State: string
         }
 
+        @Injectable
         class Store1ActionsAndState implements IStore1 {
             @State store1State = ''
             @State anotherStore1State = ''
             @State anotherStore1State2 = ''
 
             @ActionType( 'changeStore1State' ) changeStore1StateType: RxModelActionOf<IStore1, 'changeStore1State'>['type']
-            @ActionMethod changeStore1State( p: string ) {
-                this.store1State = p
-            }
+            @ActionMethod changeStore1State( p: string ) { this.store1State = p }
 
             @ActionType( 'changeAnotherStore1State' ) changeAnotherStore1StateType: RxModelActionOf<IStore1, 'changeAnotherStore1State'>['type']
-            @ActionMethod changeAnotherStore1State( p: string ) {
-                this.anotherStore1State = p
-            }
+            @ActionMethod changeAnotherStore1State( p: string ) { this.anotherStore1State = p }
 
-            @ActionMethod changeAnotherStore1State2( p: string ) {
-                this.anotherStore1State2 = p
-            } 
+            @ActionMethod changeAnotherStore1State2( p: string ) { this.anotherStore1State2 = p } 
 
             @Effect changeTheStoreState2( action$: Observable<RxModelObservableActions<IStore1>> ) {
                 return action$.pipe(
@@ -285,13 +247,12 @@ describe( 'Store', () => {
             }
         }
 
+        @Injectable
         class Store2ActionsAndState implements IStore2 {
             @State store2State = ''
 
             @ActionType( 'changeStore2State' ) changeStore2StateType: RxModelActionOf<IStore2, 'changeStore2State'>['type']
-            @ActionMethod changeStore2State( p: string ) {
-                this.store2State = p
-            }
+            @ActionMethod changeStore2State( p: string ) { this.store2State = p }
         }
 
         @Injectable
@@ -366,6 +327,7 @@ describe( 'Store', () => {
                 expect( this.classInstance3.shouldChangeValue ).toBe( 'Changed value' )
                 expect( this.classInstance2.shouldChangeValue ).toBe( 'Changed value' )
             }
+
             constructor( protected classInstance3: ClassInstance3, protected classInstance2: ClassInstance2 ) {}
         }
 
@@ -373,5 +335,39 @@ describe( 'Store', () => {
         const store = createRxStore( reducer )
         store.dispatch( actions.setDummyState() )
         expect( store.getState().dummyState ).toBe( 'Data accessed' )
+    } )
+
+    test( 'Test Services', () => {
+        @Injectable
+        class SampleService {
+            fetchServices$() { return of( 'Accessed' ) }
+        }
+
+        @Injectable
+        class MainStore {
+            @State sampleState = ''
+
+            @ActionType( 'fetchFromService' ) fetchFromServiceType: string
+            @ActionMethod fetchFromService() { return }
+            @ActionMethod setSampleState( value: string ) { this.sampleState  = value }
+
+            @Effect fetchFromServiceEffect( action$: Observable<any> ) {
+                return action$.pipe(
+                    ofType( this.fetchFromServiceType ),
+                    mergeMap( () => this.sampleService.fetchServices$() ),
+                    map( data => this.setSampleState( data ) )
+                )
+            }
+
+            constructor(
+                protected sampleService: SampleService
+            ) { }
+        }
+
+        const { reducer, actions, effects } = new RxModel( MainStore )
+        const store = createRxStore( reducer )
+        store.addEffects( effects )
+        store.dispatch( actions.fetchFromService() )
+        expect( store.getState().sampleState ).toBe( 'Accessed' )
     } )
 } )
