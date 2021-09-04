@@ -26,11 +26,12 @@
     "dev": "nodemon",
     "dev:ts": "tsc -w",
     "test": "NODE_OPTIONS=\"--unhandled-rejections=warn\" jest --no-cache",
+    "test:prepublish": "jest --no-cache",
     "test:watch": "jest --no-cache --watchAll",
     "lint": "eslint src/**/*.ts",
     "build": "rollup -c",
     "build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir types",
-    "prepublishOnly": "npm run lint && npm test && npm run clean && npm run build && npm run build:types"
+    "prepublishOnly": "npm run lint && npm run test:prepublish && npm run clean && npm run build && npm run build:types"
   },
   "author": "Nico Mendoza",
   "license": "MIT",
