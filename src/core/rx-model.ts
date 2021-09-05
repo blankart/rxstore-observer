@@ -40,25 +40,42 @@ const __genReducer = <S, T extends Action>( name: string, instance: new ( ...arg
 }
 
 /** @internal */
-const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,]*))/mg
-const ARGUMENT_NAMES = /([^\s,]+)/g
-function getParamNames( func: any ): Array<any> {
-    const fnStr = func.toString().replace( STRIP_COMMENTS, '' )
-    let result = fnStr.slice( fnStr.indexOf( '(' ) + 1, fnStr.indexOf( ')' ) ).match( ARGUMENT_NAMES )
-    if( result === null )
-        result = []
-    return result
+const __extractMappedRxModelProperties = ( target: any ) => {
+    const propertyTypes: any = {}
+    const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, target ) || {} ) as any
+    const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, target ) || [] ) as []
+    Object.getOwnPropertyNames( target ).forEach( value => {
+        if ( value === 'constructor' ) {
+            return
+        }
+        propertyTypes[ value ] = target[ value ]
+    } )
+
+    return { ...propertyTypes, ...actions, ...actionTypes }
 }
 
-export const Injectable: ClassDecorator = target => { 
+/** @internal InjectableModule container */
+export const Injectable: ClassDecorator = ( target: any ) => { 
     const paramTypes: any = Reflect.getMetadata( 'design:paramtypes', target ) || []
-    const parametersNames = getParamNames( target )
-    parametersNames.forEach( ( paramName, idx ) => {
-        if ( !  Reflect.getMetadata( RXSTORE_INJECTED_METAKEY, paramTypes[ idx ] ) ) {
-            throw new Error( `'${ paramTypes[ idx ].name }' is not an injectable class. Add @Injectable to expose the class's prototype` )
-        }
-        target.prototype[ paramName as keyof typeof target ] = paramTypes[ idx as keyof typeof paramTypes ].prototype
-    } )
+
+    /** access injectable from constructor */
+    if ( paramTypes ) {
+        const newInstance = new target( ...paramTypes || [] )
+        Object.keys( newInstance ).forEach( key => {
+            if ( paramTypes.some( ( pt: any ) => {
+                return typeof newInstance[ key ] === 'function' && new pt() instanceof newInstance[ key ] 
+            } ) ) {
+                if ( ! Reflect.hasMetadata( RXSTORE_INJECTED_METAKEY, newInstance[ key ] ) ) {
+                    console.warn( `${ newInstance[ key ].name } is not an injectable class. Make sure to decorate your class with @Injectable to access it.` )
+                    return
+                }
+
+                target.prototype[ key ] = __extractMappedRxModelProperties( newInstance[ key ].prototype )
+            }
+        } )
+    }
+
+    /** make this class injectable */
     Reflect.defineMetadata( RXSTORE_INJECTED_METAKEY, paramTypes, target )
 }
 
@@ -74,32 +91,12 @@ export class RxModel<
     reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>
 
     constructor( ClassInstance: I ) {
+        this.init( ClassInstance )
+    }
+
+    init( ClassInstance: I ) {
         const { name } = ClassInstance
         const injectedObject: any = {}
-        const parametersNames = getParamNames( ClassInstance.prototype.constructor )
-        const metadata =  Reflect.getMetadata<typeof ClassInstance>( RXSTORE_INJECTED_METAKEY, ClassInstance ) as unknown as any[] || [] 
-        if ( parametersNames.length && metadata.length === 0 ) {
-            throw new Error( `\`${ name }\` class must be injectable to access \`${ parametersNames.join( ', ' ) }\`. Make the class injectable by adding the @Injectable decorator.` )
-        }
-        /** @internal model factory */
-        metadata
-            .forEach( ( v, i ) => {
-                const propertyTypes: any = {}
-                const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, v.prototype ) || {} ) as any
-                const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, v.prototype ) || [] ) as []
-                Object.getOwnPropertyNames( v.prototype ).forEach( value => {
-                    if ( value === 'constructor' ) {
-                        return
-                    }
-                    propertyTypes[ value ] = v.prototype[ value ]
-                } )
-                injectedObject[ parametersNames[ i ] ] = {
-                    ...propertyTypes,
-                    ...actions,
-                    ...actionTypes
-                }
-            } ) 
-    
         const __proto__ = ClassInstance.prototype
         const targetInstance = new ClassInstance()
         Object.getOwnPropertyNames( __proto__ ).forEach( value => {
@@ -110,20 +107,14 @@ export class RxModel<
         } )
         const states = ( Reflect.getMetadata( RXSTORE_STATES_METAKEY, ClassInstance.prototype ) || [] ) as []
         const reducersMap = ( Reflect.getMetadata( RXSTORE_REDUCERSMAP_METAKEY, ClassInstance.prototype ) || [] ) as []
-        const actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, ClassInstance.prototype ) || {} ) as any
         const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, ClassInstance.prototype ) || [] ) as []
         const effects = ( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, ClassInstance.prototype ) || [] ) as Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
         const initialState = __genStateObject( targetInstance, states ) as S
-        const reducer = __genReducer( name, injectedObject, reducersMap, initialState )
-
+        this.actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, ClassInstance.prototype ) || {} ) as any
         this.initialState = initialState
-        this.reducer = reducer
-        this.actions = actions
-        this.effects = effects.map( v => v.bind( { 
-            ...injectedObject,
-            ...actions,
-            ...actionTypes
-        } ) )
+        Object.assign( injectedObject, this.actions, actionTypes )
+        this.reducer = __genReducer( name, injectedObject, reducersMap, initialState )
+        this.effects = effects.map( v => v.bind( injectedObject ) )
     }
 }
 

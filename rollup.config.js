@@ -36,8 +36,13 @@ export default [
             } ),
             typescript( { declaration: false } ),
             babel( {
+                presets: [ '@babel/preset-env' ],
                 extensions,
                 plugins: [
+                    [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-proposal-object-rest-spread',
+                    'babel-plugin-transform-typescript-metadata',
                     [ '@babel/plugin-transform-runtime', { version: babelRuntimeVersion } ],
                 ],
                 babelHelpers: 'runtime'
@@ -59,8 +64,13 @@ export default [
             } ),
             typescript( { declaration: false } ),
             babel( {
+                presets: [ '@babel/preset-env' ],
                 extensions,
                 plugins: [
+                    [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-proposal-object-rest-spread',
+                    'babel-plugin-transform-typescript-metadata',
                     [
                         '@babel/plugin-transform-runtime',
                         { version: babelRuntimeVersion, useESModules: true },
@@ -89,8 +99,15 @@ export default [
             } ),
             typescript( { declaration: false } ),
             babel( {
+                presets: [ '@babel/preset-env' ],
                 extensions,
                 exclude: 'node_modules/**',
+                plugins: [
+                    [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-proposal-object-rest-spread',
+                    'babel-plugin-transform-typescript-metadata',
+                ]
             } ),
             terser( {
                 compress: {
@@ -122,8 +139,15 @@ export default [
             } ),
             typescript( { declaration: false } ),
             babel( {
+                presets: [ '@babel/preset-env' ],
                 extensions,
                 exclude: 'node_modules/**',
+                plugins: [
+                    [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-proposal-object-rest-spread',
+                    'babel-plugin-transform-typescript-metadata',
+                ]
             } ),
             replace( {
                 preventAssignment: true,
@@ -149,10 +173,19 @@ export default [
             nodeResolve( {
                 extensions,
             } ),
-            typescript( { declaration: false } ),
+            typescript( { 
+                declaration: false,
+            } ),
             babel( {
+                presets: [ '@babel/preset-env' ],
                 extensions,
                 exclude: 'node_modules/**',
+                plugins: [
+                    [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-proposal-object-rest-spread',
+                    'babel-plugin-transform-typescript-metadata',
+                ]
             } ),
             replace( {
                 preventAssignment: true,

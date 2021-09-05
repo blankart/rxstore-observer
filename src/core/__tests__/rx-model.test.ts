@@ -207,11 +207,12 @@ describe( 'Store', () => {
     } )
 
     test( 'Shared action types and dispatchers from multiple Store instances', () => {
-        type IStore1 = {
+        type IStore1_ = {
             changeStore1State: ( p: string ) => void
             changeAnotherStore1State: ( p: string ) => void
+            changeAnotherStore1State2: ( p: string ) => void
         }
-        type IStore2 = {
+        type IStore2_ = {
             changeStore2State: ( p: string ) => void
         }
 
@@ -219,6 +220,7 @@ describe( 'Store', () => {
             store1State: string
             anotherStore1State: string
             anotherStore1State2: string
+            shouldChangeFromStore2: string
         }
 
         interface IStore2State {
@@ -226,54 +228,67 @@ describe( 'Store', () => {
         }
 
         @Injectable
-        class Store1ActionsAndState implements IStore1 {
+        class Store1ActionsAndState implements IStore1_ {
             @State store1State = ''
             @State anotherStore1State = ''
             @State anotherStore1State2 = ''
+            @State shouldChangeFromStore2 = ''
 
-            @ActionType( 'changeStore1State' ) changeStore1StateType: RxModelActionOf<IStore1, 'changeStore1State'>['type']
+            @ActionType( 'changeStore1State' ) changeStore1StateType: RxModelActionOf<IStore1_, 'changeStore1State'>['type']
             @ActionMethod changeStore1State( p: string ) { this.store1State = p }
 
-            @ActionType( 'changeAnotherStore1State' ) changeAnotherStore1StateType: RxModelActionOf<IStore1, 'changeAnotherStore1State'>['type']
+            @ActionType( 'changeAnotherStore1State' ) changeAnotherStore1StateType: RxModelActionOf<IStore1_, 'changeAnotherStore1State'>['type']
             @ActionMethod changeAnotherStore1State( p: string ) { this.anotherStore1State = p }
 
+            @ActionType( 'changeAnotherStore1State2' ) changeAnotherStore2StateType: RxModelActionOf<IStore1_, 'changeAnotherStore1State2'>['type']
             @ActionMethod changeAnotherStore1State2( p: string ) { this.anotherStore1State2 = p } 
+            @ActionMethod changeShouldChangeFromStore2( p: string ) { this.shouldChangeFromStore2 = p }
 
-            @Effect changeTheStoreState2( action$: Observable<RxModelObservableActions<IStore1>> ) {
+            @Effect changeTheStoreState2( action$: Observable<RxModelObservableActions<IStore1_>> ) {
                 return action$.pipe(
-                    ofType<RxModelActionOf<IStore1, 'changeAnotherStore1State'>>( this.changeAnotherStore1StateType ),
+                    ofType<RxModelActionOf<IStore1_, 'changeAnotherStore1State'>>( this.changeAnotherStore1StateType ),
                     mapTo( this.changeAnotherStore1State2( 'Final change' ) )
                 )
             }
         }
 
         @Injectable
-        class Store2ActionsAndState implements IStore2 {
+        class Store2ActionsAndState implements IStore2_ {
             @State store2State = ''
 
-            @ActionType( 'changeStore2State' ) changeStore2StateType: RxModelActionOf<IStore2, 'changeStore2State'>['type']
+            @ActionType( 'changeStore2State' ) changeStore2StateType: RxModelActionOf<IStore2_, 'changeStore2State'>['type']
             @ActionMethod changeStore2State( p: string ) { this.store2State = p }
         }
 
         @Injectable
-        class Store1 extends Store1ActionsAndState {
+        class Store1_ extends Store1ActionsAndState {
             @State dumyState = ''
-            @Effect store2Effect( action$: Observable<RxModelObservableActions<IStore2>> ) {
+            @Effect store2Effect( action$: Observable<RxModelObservableActions<IStore2_>> ) {
                 return action$.pipe(
-                    ofType<RxModelActionOf<IStore2, 'changeStore2State'>>( this.store2Actions.changeStore2StateType ),
+                    ofType<RxModelActionOf<IStore2_, 'changeStore2State'>>( this.store2Actions.changeStore2StateType ),
                     map( action => this.changeAnotherStore1State( ...action.payload ) )
                 )
             }
 
-            constructor( protected store2Actions: Store2ActionsAndState ) { super() }
+            @Effect anotherStore2Effect(  action$: Observable<RxModelObservableActions<IStore2_>> ) {
+                return action$.pipe(
+                    ofType<RxModelActionOf<IStore1_, 'changeAnotherStore1State2'>>( this.store1Actions.changeAnotherStore2StateType ),
+                    mapTo( this.store1Actions.changeShouldChangeFromStore2( 'Final change' ) )
+                )
+            }
+
+            constructor( 
+                protected store2Actions: Store2ActionsAndState,
+                protected store1Actions: Store1ActionsAndState 
+            ) { super() }
         }
 
         @Injectable
-        class Store2 extends Store2ActionsAndState {
+        class Store2_ extends Store2ActionsAndState {
             @State dumyState = ''
-            @Effect store1Effect( action$: Observable<RxModelObservableActions<IStore1>> ) {
+            @Effect store1Effect( action$: Observable<RxModelObservableActions<IStore1_>> ) {
                 return action$.pipe(
-                    ofType<RxModelActionOf<IStore1, 'changeStore1State'>>( this.store1Actions.changeStore1StateType ),
+                    ofType<RxModelActionOf<IStore1_, 'changeStore1State'>>( this.store1Actions.changeStore1StateType ),
                     map( action => this.changeStore2State( ...action.payload ) )
                 )
             }
@@ -281,8 +296,8 @@ describe( 'Store', () => {
             constructor( protected store1Actions: Store1ActionsAndState ) { super() }
         }
 
-        const { reducer: store1, actions: storeActions1, effects: storeEffects1 } = new RxModel<IStore1State, IStore1>( Store1 )
-        const { reducer: store2, effects: storeEffects2 } = new RxModel<IStore2State, IStore2>( Store2 )
+        const { reducer: store1, actions: storeActions1, effects: storeEffects1 } = new RxModel<IStore1State, IStore1_>( Store1_ )
+        const { reducer: store2, effects: storeEffects2 } = new RxModel<IStore2State, IStore2_>( Store2_ )
         const store = createRxStore( combineReducers( { store1, store2 } ) )
         store.addEffects( [ ...storeEffects1, ...storeEffects2 ] )
         store.dispatch( storeActions1.changeStore1State( 'Changed value' ) )
@@ -290,9 +305,11 @@ describe( 'Store', () => {
         expect( store.getState().store2.store2State ).toBe( 'Changed value' )
         expect( store.getState().store1.anotherStore1State ).toBe( 'Changed value' )
         expect( store.getState().store1.anotherStore1State2 ).toBe( 'Final change' )
+        expect( store.getState().store1.shouldChangeFromStore2 ).toBe( 'Final change' )
     }  )
 
     test( 'Test nested @Injectable', () => {
+        const snapShots: any[] = []
         @Injectable
         class ClassInstance1 {
             accessThisMethod(): string { return 'Data accessed' }
@@ -324,8 +341,9 @@ describe( 'Store', () => {
 
             @ActionMethod setDummyState() {
                 this.dummyState = this.classInstance3.accessClassInstance2Method()
-                expect( this.classInstance3.shouldChangeValue ).toBe( 'Changed value' )
-                expect( this.classInstance2.shouldChangeValue ).toBe( 'Changed value' )
+                this.classInstance2.accessClassInstance1Method() 
+                snapShots.push( this.classInstance3.shouldChangeValue )
+                snapShots.push( this.classInstance2.shouldChangeValue )
             }
 
             constructor( protected classInstance3: ClassInstance3, protected classInstance2: ClassInstance2 ) {}
@@ -335,6 +353,7 @@ describe( 'Store', () => {
         const store = createRxStore( reducer )
         store.dispatch( actions.setDummyState() )
         expect( store.getState().dummyState ).toBe( 'Data accessed' )
+        expect( snapShots ).toEqual( [ 'Changed value', 'Changed value' ] )
     } )
 
     test( 'Test Services', () => {

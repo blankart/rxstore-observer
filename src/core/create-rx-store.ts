@@ -120,7 +120,10 @@ const createRxStore = <
         } )
     }
 
-    const dispatch = ( newAction: T ) => action$.next( newAction )
+    const dispatch = ( newAction: T ): T => {
+        action$.next( newAction )
+        return newAction
+    }
 
     return { getState, subscribe, dispatch, addEffect, addEffects }
 }

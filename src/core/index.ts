@@ -3,4 +3,6 @@ export { default as applyMiddleware } from './apply-middleware'
 export { default as combineReducers } from './combine-reducers'
 export { default as compose } from './compose'
 export { default as ofType } from './of-type'
-export * from './rx-model'
+export { 
+    Injectable, RxModel, ActionMethod, Effect, State, ActionType
+} from './rx-model'
