@@ -1,4 +1,4 @@
-import { Action, RxReducer, RxReducersMapObject } from '../types'
+import { AnyAction, RxReducer, RxReducersMapObject } from '../types'
 
 /**
  * This function combines all object reducers into a single reducer.
@@ -34,7 +34,7 @@ import { Action, RxReducer, RxReducersMapObject } from '../types'
  */
 const combineReducers = <
     S extends Record<string, any>,
-    T extends Action
+    T extends AnyAction
 >( reducers: RxReducersMapObject<S, any> ): RxReducer<S, T> => {
     const reducerKeys = Object.keys( reducers ) as Array<keyof RxReducersMapObject<S, T>>
 

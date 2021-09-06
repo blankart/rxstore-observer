@@ -6,8 +6,6 @@ import { EffectFunction } from 'src/types'
 
 describe( 'createEffect', () => {
     test( 'Register function instances inside addEffects', () => {
-        const dummyStore = createRxStore( reducer )
-
         const dummyEffect1: EffectFunction<State, Action, ChangeDummyField2Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) )
@@ -18,10 +16,7 @@ describe( 'createEffect', () => {
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) ),
         )
 
-        dummyStore.addEffects( [
-            dummyEffect1,
-            dummyEffect2
-        ] )
+        const dummyStore = createRxStore( reducer, undefined, [ dummyEffect1, dummyEffect2 ] )
 
         dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
@@ -30,8 +25,6 @@ describe( 'createEffect', () => {
     } )
 
     test( 'Calling action$.next() should trigger another dispatch', () => {
-        const dummyStore = createRxStore( reducer )
-
         const dummyEffect1: EffectFunction<State, Action, ChangeDummyField3Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) )
@@ -42,10 +35,7 @@ describe( 'createEffect', () => {
             map( action => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( action as Action ).payload } ) ),
         )
 
-        dummyStore.addEffects( [
-            dummyEffect1,
-            dummyEffect2
-        ] )
+        const dummyStore = createRxStore( reducer, undefined, [ dummyEffect1, dummyEffect2 ] )
 
         dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )
@@ -54,9 +44,7 @@ describe( 'createEffect', () => {
     } )
 
     test( 'Gets the current store value', () => {
-        const dummyStore = createRxStore( reducer )
         const stubbedState: Array<State> = []
-
         const dummyEffect1: EffectFunction<State, Action, ChangeDummyField3Action> = ( action$, state$ ) => action$.pipe(
             ofType<ChangeDummyField1Action>( 'CHANGE_DUMMY_FIELD_1' ),
             withLatestFrom( state$ ),
@@ -64,9 +52,7 @@ describe( 'createEffect', () => {
             map( ( [ action ] ) => ( { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload } ) )
         )
 
-        dummyStore.addEffects( [
-            dummyEffect1,
-        ] )
+        const dummyStore = createRxStore( reducer, undefined, [ dummyEffect1 ] )
 
         dummyStore.dispatch( { type: "CHANGE_DUMMY_FIELD_1", payload: 'Changed value' } )
         expect( dummyStore.getState().dummyField1 ).toBe( 'Changed value' )

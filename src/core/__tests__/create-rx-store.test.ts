@@ -1,14 +1,14 @@
 import createRxStore from '../create-rx-store'
 import ofType from '../of-type'
 import { map } from 'rxjs/operators'
-import { Action, reducer, initialState, ChangeDummyField3Action, ChangeDummyField2Action } from '../../templates/mock-store'
+import { Action, reducer, initialState, ChangeDummyField3Action, ChangeDummyField2Action, State } from '../../templates/mock-store'
+import { EffectFunction } from 'src/types'
 
 describe( 'createRxJsStore', () => {
     test( 'Store initialization', () => {
         const dummyStore = createRxStore( reducer )
         expect( dummyStore.getState ).toBeTruthy()
         expect( dummyStore.getState() ).toEqual( initialState )
-        expect( dummyStore.addEffect ).toBeTruthy()
         expect( dummyStore.subscribe ).toBeTruthy()
         expect( dummyStore.dispatch ).toBeTruthy()
     } )
@@ -36,7 +36,7 @@ describe( 'createRxJsStore', () => {
             const tryMockFunction = jest.fn()
             const catchMockFunction = jest.fn()
             try {
-                createRxStore( reducer, undefined, invalidEnhancer as any )
+                createRxStore( reducer, undefined, undefined, invalidEnhancer as any )
                 tryMockFunction()
             } catch ( e ) {
                 catchMockFunction()
@@ -65,20 +65,21 @@ describe( 'createRxJsStore', () => {
     } )
 
     test( 'Store effects', () => {
-        const dummyStore = createRxStore( reducer )
-        dummyStore.addEffect<ChangeDummyField2Action>( action$ => action$.pipe(
+        const effect1: EffectFunction<State, Action, ChangeDummyField2Action> = action$ => action$.pipe(
             ofType( 'CHANGE_DUMMY_FIELD_1' ),
             map( value => ( { type: 'CHANGE_DUMMY_FIELD_2', payload: ( value as Action ).payload } ) )
-        ) )
+        ) 
 
-        dummyStore.addEffect<ChangeDummyField3Action>( action$ => { 
+        const effect2: EffectFunction<State, Action, ChangeDummyField3Action> = action$ => { 
             return action$.pipe(
                 ofType( 'CHANGE_DUMMY_FIELD_1' ),
                 map( action => { 
                     return { type: 'CHANGE_DUMMY_FIELD_3', payload: ( action as Action ).payload }  
                 } )
             )
-        } )
+        } 
+
+        const dummyStore = createRxStore( reducer, undefined, [ effect1, effect2 ] )
 
         dummyStore.dispatch( { type: 'CHANGE_DUMMY_FIELD_1', payload: 'Changed value' } )
         expect( dummyStore.getState() ).toEqual( {

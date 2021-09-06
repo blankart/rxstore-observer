@@ -1,4 +1,4 @@
-import { RxReducer, Action, EffectFunction, ActionWithPayload } from '../types'
+import { RxReducer, EffectFunction, ActionWithPayload } from '../types'
 
 const RXSTORE_INJECTED_METAKEY = '__@@rxstore/injected'
 const RXSTORE_ACTIONS_METAKEY = '__@@rxstore/actions'
@@ -17,7 +17,7 @@ const __genStateObject = <S>( classInstance: S, keys: Array<Partial<keyof S>> ):
 }
 
 /** @internal */
-const __genReducer = <S, T extends Action>( name: string, instance: new ( ...args: any ) => any, reducersMap: any[], initialState: S ) => {
+const __genReducer = <S, T extends ActionWithPayload>( name: string, instance: new ( ...args: any ) => any, reducersMap: any[], initialState: S ) => {
     return ( state: S = initialState, action: T ): S => {
         let reducersKeyMap: any = { ...instance }
         const switchReducerKeysMap: any = {}
@@ -87,8 +87,8 @@ export class RxModel<
 > {
     initialState: S
     actions: { [ K in keyof A ]: ( ...a: Parameters<A[K]> ) => ActionWithPayload<K, Parameters<A[K]>> }
-    effects: Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
-    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>
+    effects: Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K,Parameters<A[K]>> }[ keyof A ]>>
+    reducer: RxReducer<S, { [ K in keyof A ]: ActionWithPayload<K,Parameters<A[K]>> }[ keyof A ]>
 
     constructor( ClassInstance: I ) {
         this.init( ClassInstance )
@@ -108,7 +108,7 @@ export class RxModel<
         const states = ( Reflect.getMetadata( RXSTORE_STATES_METAKEY, ClassInstance.prototype ) || [] ) as []
         const reducersMap = ( Reflect.getMetadata( RXSTORE_REDUCERSMAP_METAKEY, ClassInstance.prototype ) || [] ) as []
         const actionTypes = ( Reflect.getMetadata( RXSTORE_ACTIONTYPES_METAKEY, ClassInstance.prototype ) || [] ) as []
-        const effects = ( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, ClassInstance.prototype ) || [] ) as Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K, Parameters<A[K]>> }[ keyof A ]>>
+        const effects = ( Reflect.getMetadata( RXSTORE_EFFECTS_METAKEY, ClassInstance.prototype ) || [] ) as Array<EffectFunction<S, { [ K in keyof A ]: ActionWithPayload<K,Parameters<A[K]>> }[ keyof A ]>>
         const initialState = __genStateObject( targetInstance, states ) as S
         this.actions = ( Reflect.getMetadata( RXSTORE_ACTIONS_METAKEY, ClassInstance.prototype ) || {} ) as any
         this.initialState = initialState
@@ -119,7 +119,7 @@ export class RxModel<
 }
 
 export const ActionMethod = <
-    T extends Action
+    T extends ActionWithPayload
 >( target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<{ ( ...args: any ): void | undefined }> ) => {
     let isPromise = false
     try {

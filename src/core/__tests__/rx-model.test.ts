@@ -3,7 +3,7 @@ import { map, mapTo, mergeMap } from 'rxjs/operators'
 import { ActionMethods, State as IState } from '../../templates/mock-store'
 import { Injectable, RxModel, ActionMethod, ActionType, State, Effect } from '../rx-model'
 import { Observable, of, Subject } from 'rxjs'
-import { RxModelActionOf, RxModelObservableActions } from 'src/types'
+import { EffectFunction, RxModelActionOf, RxModelObservableActions } from 'src/types'
 import createRxStore from '../create-rx-store'
 import combineReducers from '../combine-reducers'
 
@@ -67,9 +67,8 @@ describe( 'Store', () => {
             }
         }
 
-        const { reducer, actions, effects } = new RxModel( DummyStoreInstance )
-        const dummyStore = createRxStore( reducer )
-        dummyStore.addEffects( effects )
+        const { reducer, actions, effects, initialState } = new RxModel( DummyStoreInstance )
+        const dummyStore = createRxStore( reducer, initialState, [ ...effects ] )
         dummyStore.dispatch( actions.changeDummyField1( 'Changed value' ) )
         expect( dummyStore.getState() ).toEqual( {
             dummyField1: 'Changed value',
@@ -298,8 +297,8 @@ describe( 'Store', () => {
 
         const { reducer: store1, actions: storeActions1, effects: storeEffects1 } = new RxModel<IStore1State, IStore1_>( Store1_ )
         const { reducer: store2, effects: storeEffects2 } = new RxModel<IStore2State, IStore2_>( Store2_ )
-        const store = createRxStore( combineReducers( { store1, store2 } ) )
-        store.addEffects( [ ...storeEffects1, ...storeEffects2 ] )
+        const effects: Array<EffectFunction<any, any>> = [ ...storeEffects1, ...storeEffects2 ]
+        const store = createRxStore( combineReducers( { store1, store2 } ), undefined, effects )
         store.dispatch( storeActions1.changeStore1State( 'Changed value' ) )
         expect( store.getState().store1.store1State ).toBe( 'Changed value' )
         expect( store.getState().store2.store2State ).toBe( 'Changed value' )
@@ -383,9 +382,8 @@ describe( 'Store', () => {
             ) { }
         }
 
-        const { reducer, actions, effects } = new RxModel( MainStore )
-        const store = createRxStore( reducer )
-        store.addEffects( effects )
+        const { reducer, actions, effects, initialState } = new RxModel( MainStore )
+        const store = createRxStore( reducer, initialState, effects )
         store.dispatch( actions.fetchFromService() )
         expect( store.getState().sampleState ).toBe( 'Accessed' )
     } )
